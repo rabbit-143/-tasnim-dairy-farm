@@ -1,0 +1,120 @@
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Middleware
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Created uploads directory');
+}
+
+// Multer configuration for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + file.originalname;
+    cb(null, uniqueName);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only JPG, PNG, and WEBP files are allowed'), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+});
+
+// Image upload endpoint
+app.post('/api/upload/image', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const filepath = `/uploads/${req.file.filename}`;
+    
+    res.json({
+      success: true,
+      filepath: filepath,
+      filename: req.file.filename
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
+
+// API Routes
+const foundersRouter = require('./routes/founders');
+const blogsRouter = require('./routes/blogs');
+const galleryRouter = require('./routes/gallery');
+const careersRouter = require('./routes/careers');
+const settingsRouter = require('./routes/settings');
+
+app.use('/api/founders', foundersRouter);
+app.use('/api/blogs', blogsRouter);
+app.use('/api/gallery', galleryRouter);
+app.use('/api/careers', careersRouter);
+app.use('/api/settings', settingsRouter);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Tasnim Dairy Farm API is running' });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File size exceeds 5MB limit' });
+    }
+    return res.status(400).json({ error: err.message });
+  }
+  
+  res.status(500).json({ error: err.message || 'Internal server error' });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`
+╔═══════════════════════════════════════════════════╗
+║   Tasnim Dairy Farm Backend API                   ║
+║   Server running on http://localhost:${PORT}      ║
+║   Frontend: http://localhost:5173                 ║
+╚═══════════════════════════════════════════════════╝
+  `);
+});

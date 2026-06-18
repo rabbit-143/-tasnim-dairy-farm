@@ -1,0 +1,22 @@
+# Node modules
+node_modules/
+
+# Database file
+tasnim.db
+tasnim.db-shm
+tasnim.db-wal
+
+# Uploads directory (optional - remove if you want to track uploads)
+uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
