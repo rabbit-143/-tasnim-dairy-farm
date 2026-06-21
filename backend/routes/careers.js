@@ -1,20 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database');
+const { getDb, save, getById, existsById, deleteById } = require('../database');
+
+function parseCareerRow(row) {
+  return {
+    id: row[0],
+    title: row[1],
+    department: row[2],
+    vacancy: row[3],
+    deadline: row[4],
+    requirements: JSON.parse(row[5] || '[]'),
+    applyEmail: row[6],
+    active: Boolean(row[7])
+  };
+}
 
 // GET all careers
 router.get('/', (req, res) => {
   try {
-    const careers = db.prepare('SELECT * FROM careers ORDER BY id DESC').all();
-    
-    // Parse requirements JSON and convert active to boolean
-    const careersWithParsedData = careers.map(career => ({
-      ...career,
-      requirements: JSON.parse(career.requirements || '[]'),
-      active: career.active === 1
-    }));
-    
-    res.json(careersWithParsedData);
+    const db = getDb();
+    if (!db) return res.status(500).json({ error: 'Database not initialized' });
+    const result = db.exec('SELECT * FROM careers ORDER BY deadline DESC');
+    if (result.length === 0 || result[0].values.length === 0) return res.json([]);
+    res.json(result[0].values.map(parseCareerRow));
   } catch (error) {
     console.error('Error fetching careers:', error);
     res.status(500).json({ error: 'Failed to fetch careers' });
@@ -24,36 +32,26 @@ router.get('/', (req, res) => {
 // POST new career
 router.post('/', (req, res) => {
   try {
+    const db = getDb();
+    if (!db) return res.status(500).json({ error: 'Database not initialized' });
     const { title, department, vacancy, deadline, requirements, applyEmail, active } = req.body;
-    
-    if (!title || !department || !vacancy || !deadline || !applyEmail) {
-      return res.status(400).json({ error: 'Required fields missing' });
-    }
+    if (!title || !department) return res.status(400).json({ error: 'Title and department are required' });
 
     const requirementsJson = JSON.stringify(requirements || []);
-    
-    const stmt = db.prepare(`
-      INSERT INTO careers (title, department, vacancy, deadline, requirements, applyEmail, active)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-    
-    const result = stmt.run(
-      title, 
-      department, 
-      vacancy, 
-      deadline, 
-      requirementsJson, 
-      applyEmail, 
-      active ? 1 : 0
+
+    db.run(
+      'INSERT INTO careers (title, department, vacancy, deadline, requirements, applyEmail, active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [title, department, vacancy || 1, deadline || '', requirementsJson, applyEmail || '', active ? 1 : 0]
     );
-    
-    const newCareer = db.prepare('SELECT * FROM careers WHERE id = ?').get(result.lastInsertRowid);
-    
-    res.status(201).json({
-      ...newCareer,
-      requirements: JSON.parse(newCareer.requirements || '[]'),
-      active: newCareer.active === 1
-    });
+    save();
+
+    const result = db.exec('SELECT MAX(id) as lastId FROM careers');
+    const lastId = result[0].values[0][0];
+    const itemResult = getById('careers', lastId);
+    if (itemResult.length === 0 || itemResult[0].values.length === 0)
+      return res.status(500).json({ error: 'Failed to retrieve created career' });
+
+    res.status(201).json(parseCareerRow(itemResult[0].values[0]));
   } catch (error) {
     console.error('Error creating career:', error);
     res.status(500).json({ error: 'Failed to create career' });
@@ -63,41 +61,23 @@ router.post('/', (req, res) => {
 // PUT update career
 router.put('/:id', (req, res) => {
   try {
+    const db = getDb();
+    if (!db) return res.status(500).json({ error: 'Database not initialized' });
     const { id } = req.params;
     const { title, department, vacancy, deadline, requirements, applyEmail, active } = req.body;
-    
-    const existing = db.prepare('SELECT * FROM careers WHERE id = ?').get(id);
-    if (!existing) {
-      return res.status(404).json({ error: 'Career not found' });
-    }
+
+    if (!existsById('careers', id)) return res.status(404).json({ error: 'Career not found' });
 
     const requirementsJson = JSON.stringify(requirements || []);
-    
-    const stmt = db.prepare(`
-      UPDATE careers 
-      SET title = ?, department = ?, vacancy = ?, deadline = ?, 
-          requirements = ?, applyEmail = ?, active = ?
-      WHERE id = ?
-    `);
-    
-    stmt.run(
-      title, 
-      department, 
-      vacancy, 
-      deadline, 
-      requirementsJson, 
-      applyEmail, 
-      active ? 1 : 0, 
-      id
+
+    db.run(
+      'UPDATE careers SET title = ?, department = ?, vacancy = ?, deadline = ?, requirements = ?, applyEmail = ?, active = ? WHERE id = ?',
+      [title, department, vacancy, deadline, requirementsJson, applyEmail, active ? 1 : 0, id]
     );
-    
-    const updated = db.prepare('SELECT * FROM careers WHERE id = ?').get(id);
-    
-    res.json({
-      ...updated,
-      requirements: JSON.parse(updated.requirements || '[]'),
-      active: updated.active === 1
-    });
+    save();
+
+    const result = getById('careers', id);
+    res.json(parseCareerRow(result[0].values[0]));
   } catch (error) {
     console.error('Error updating career:', error);
     res.status(500).json({ error: 'Failed to update career' });
@@ -107,16 +87,13 @@ router.put('/:id', (req, res) => {
 // DELETE career
 router.delete('/:id', (req, res) => {
   try {
+    const db = getDb();
+    if (!db) return res.status(500).json({ error: 'Database not initialized' });
     const { id } = req.params;
-    
-    const existing = db.prepare('SELECT * FROM careers WHERE id = ?').get(id);
-    if (!existing) {
-      return res.status(404).json({ error: 'Career not found' });
-    }
 
-    const stmt = db.prepare('DELETE FROM careers WHERE id = ?');
-    stmt.run(id);
-    
+    if (!existsById('careers', id)) return res.status(404).json({ error: 'Career not found' });
+
+    deleteById('careers', id);
     res.json({ message: 'Career deleted successfully' });
   } catch (error) {
     console.error('Error deleting career:', error);

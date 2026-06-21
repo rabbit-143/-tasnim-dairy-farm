@@ -2,6 +2,8 @@
 // In production this would connect to PHP/MySQL backend
 
 import React from 'react';
+import { FaHome, FaUsers, FaBullseye, FaChartLine, FaStar } from 'react-icons/fa';
+import { GiMilkCarton } from 'react-icons/gi';
 
 export interface Founder {
   id: number;
@@ -41,6 +43,17 @@ export interface CareerPost {
   requirements: string[];
   applyEmail: string;
   active: boolean;
+}
+
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface SiteSettings {
@@ -204,9 +217,6 @@ export const defaultCareers: CareerPost[] = [
     active: true,
   },
 ];
-
-import { FaHome, FaUsers, FaBullseye, FaChartLine, FaStar } from "react-icons/fa";
-import { GiMilkCarton } from "react-icons/gi";
 
 export const defaultGrowthStats = [
   { label: 'Farm Established', value: '2026', icon: FaHome },

@@ -59,11 +59,11 @@ const Footer: React.FC = () => {
               </div>
             </div>
             <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.65)', lineHeight: '1.7', marginBottom: '1.5rem' }}>
-              Established on 2015. Committed to producing pure, safe, and high-quality milk while contributing to food security and sustainable agriculture.
+              Established 2015. Committed to producing pure, safe, and high-quality milk while contributing to food security and sustainable agriculture.
             </p>
             {/* Bismillah */}
             <div style={{
-              fontFamily: 'font-family: "Noto Sans", sans-serif',
+              fontFamily: '"Noto Sans", sans-serif',
               color: '#D4AF37',
               fontSize: '1rem',
               padding: '0.75rem',
@@ -171,7 +171,7 @@ const Footer: React.FC = () => {
                   { href: settings.instagram, icon: '/images/social-media/instagram.png', label: 'Instagram', color: '#E1306C' },
                   { href: settings.whatsapp, icon: '/images/social-media/social.png', label: 'WhatsApp', color: '#25D366' },
                   { href: settings.youtube, icon: '/images/social-media/youtube.png', label: 'YouTube', color: '#FF0000' },
-                  { href: 'https://www.linkedin.com', icon: '/images/social-media/linkedin.png', label: 'LinkedIn', color: '#0A66C2' },
+                  { href: settings.linkedin, icon: '/images/social-media/linkedin.png', label: 'LinkedIn', color: '#0A66C2' },
                 ].map(social => (
                   <a
                     key={social.label}
@@ -216,12 +216,23 @@ const Footer: React.FC = () => {
 
       {/* Bottom bar */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: '1.25rem 1.5rem', textAlign: 'center' }}>
-        <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)' }}>
-          © 2026 {settings.siteName}. All Rights Reserved. | Built with care for pure milk production.
-        </p>
-        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: '0.35rem' }}>
-          Pure Milk. Pure Promise. Pure Bangladesh.
-        </p>
+            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)' }}>
+              © 2026 {settings.siteName}. All Rights Reserved. | Built with care for pure milk production.
+              {' '}Developed By{' '}
+              <a
+                href="https://www.facebook.com/hmnobin.24434"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: '#D4AF37',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  transition: '0.3s'
+                }}
+              >
+                HM Nobin
+              </a>
+            </p>
       </div>
     </footer>
   );

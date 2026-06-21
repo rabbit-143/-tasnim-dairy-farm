@@ -30,15 +30,19 @@ const AdminCareers: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim() || !form.department.trim()) { alert('Title and department required.'); return; }
     const data = {
       ...form,
       requirements: form.requirements.split('\n').map(r => r.trim()).filter(r => r),
     };
-    if (editing) { updateCareer(editing.id, data); }
-    else { addCareer(data); }
-    resetForm();
+    try {
+      if (editing) { await updateCareer(editing.id, data); }
+      else { await addCareer(data); }
+      resetForm();
+    } catch (error) {
+      // Error already handled in context
+    }
   };
 
   return (
@@ -86,7 +90,7 @@ const AdminCareers: React.FC = () => {
                 {career.active ? <><FaPause size={12} /> Deactivate</> : <><FaPlay size={12} /> Activate</>}
               </button>
               <button onClick={() => openEdit(career)} className="admin-btn-edit"><FaEdit size={14} /></button>
-              <button onClick={() => { if (confirm('Delete this job posting?')) deleteCareer(career.id); }} className="admin-btn-danger"><FaTrash size={14} /></button>
+              <button onClick={async () => { if (confirm('Delete this job posting?')) { try { await deleteCareer(career.id); } catch (e) { /* handled in context */ } } }} className="admin-btn-danger"><FaTrash size={14} /></button>
             </div>
           </div>
         ))}

@@ -1,37 +1,47 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database');
+const { getDb, save, getById, existsById, deleteById } = require('../database');
+
+function parseGalleryRow(row) {
+  return { id: row[0], title: row[1], category: row[2], image: row[3], date: row[4] };
+}
 
 // GET all gallery items
 router.get('/', (req, res) => {
   try {
-    const items = db.prepare('SELECT * FROM gallery ORDER BY date DESC').all();
-    res.json(items);
+    const db = getDb();
+    if (!db) return res.status(500).json({ error: 'Database not initialized' });
+    const result = db.exec('SELECT * FROM gallery ORDER BY date DESC');
+    if (result.length === 0 || result[0].values.length === 0) return res.json([]);
+    res.json(result[0].values.map(parseGalleryRow));
   } catch (error) {
     console.error('Error fetching gallery:', error);
-    res.status(500).json({ error: 'Failed to fetch gallery items' });
+    res.status(500).json({ error: 'Failed to fetch gallery' });
   }
 });
 
 // POST new gallery item
 router.post('/', (req, res) => {
   try {
+    const db = getDb();
+    if (!db) return res.status(500).json({ error: 'Database not initialized' });
     const { title, category, image, date } = req.body;
-    
-    if (!title || !category || !image || !date) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
+    if (!title || !category || !image)
+      return res.status(400).json({ error: 'Title, category, and image are required' });
 
-    const stmt = db.prepare(`
-      INSERT INTO gallery (title, category, image, date)
-      VALUES (?, ?, ?, ?)
-    `);
-    
-    const result = stmt.run(title, category, image, date);
-    
-    const newItem = db.prepare('SELECT * FROM gallery WHERE id = ?').get(result.lastInsertRowid);
-    
-    res.status(201).json(newItem);
+    db.run(
+      'INSERT INTO gallery (title, category, image, date) VALUES (?, ?, ?, ?)',
+      [title, category, image, date || new Date().toISOString().split('T')[0]]
+    );
+    save();
+
+    const result = db.exec('SELECT MAX(id) as lastId FROM gallery');
+    const lastId = result[0].values[0][0];
+    const itemResult = getById('gallery', lastId);
+    if (itemResult.length === 0 || itemResult[0].values.length === 0)
+      return res.status(500).json({ error: 'Failed to retrieve created item' });
+
+    res.status(201).json(parseGalleryRow(itemResult[0].values[0]));
   } catch (error) {
     console.error('Error creating gallery item:', error);
     res.status(500).json({ error: 'Failed to create gallery item' });
@@ -41,16 +51,13 @@ router.post('/', (req, res) => {
 // DELETE gallery item
 router.delete('/:id', (req, res) => {
   try {
+    const db = getDb();
+    if (!db) return res.status(500).json({ error: 'Database not initialized' });
     const { id } = req.params;
-    
-    const existing = db.prepare('SELECT * FROM gallery WHERE id = ?').get(id);
-    if (!existing) {
-      return res.status(404).json({ error: 'Gallery item not found' });
-    }
 
-    const stmt = db.prepare('DELETE FROM gallery WHERE id = ?');
-    stmt.run(id);
-    
+    if (!existsById('gallery', id)) return res.status(404).json({ error: 'Gallery item not found' });
+
+    deleteById('gallery', id);
     res.json({ message: 'Gallery item deleted successfully' });
   } catch (error) {
     console.error('Error deleting gallery item:', error);

@@ -6,7 +6,7 @@ const WelcomeAnimation: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(false);
-    }, 3800);
+    }, 3900);
     return () => clearTimeout(timer);
   }, []);
 

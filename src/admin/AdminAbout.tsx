@@ -1,22 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { FaSave, FaCheckCircle, FaHome, FaEye, FaBullseye, FaChartBar } from 'react-icons/fa';
 
 const AdminAbout: React.FC = () => {
   const { settings, updateSettings, growthStats, updateGrowthStat } = useAdmin();
   const [saved, setSaved] = useState(false);
-  const [aboutContent, setAboutContent] = useState(settings.aboutContent);
-  const [vision, setVision] = useState(settings.vision);
-  const [mission, setMission] = useState(settings.mission.join('\n'));
+  const [aboutContent, setAboutContent] = useState('');
+  const [vision, setVision] = useState('');
+  const [mission, setMission] = useState('');
 
-  const handleSave = () => {
-    updateSettings({
-      aboutContent,
-      vision,
-      mission: mission.split('\n').map(m => m.trim()).filter(m => m),
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  // Update form when settings change
+  useEffect(() => {
+    setAboutContent(settings.aboutContent || '');
+    setVision(settings.vision || '');
+    setMission((settings.mission || []).join('\n'));
+  }, [settings]);
+
+  const handleSave = async () => {
+    try {
+      await updateSettings({
+        aboutContent,
+        vision,
+        mission: mission.split('\n').map(m => m.trim()).filter(m => m),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      // Error already handled in context
+    }
   };
 
   return (
@@ -104,7 +115,7 @@ const AdminAbout: React.FC = () => {
               return (
                 <div key={i} style={{ background: '#F8F9FA', borderRadius: '12px', padding: '1rem', border: '1px solid #e5e7eb' }}>
                   <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#0F5D2F' }}>
-                    <IconComponent size={24} />
+                    <FaChartBar size={24} />
                   </div>
                   <div>
                     <label className="admin-label" style={{ fontSize: '0.72rem' }}>Label</label>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { FaSave, FaCheckCircle, FaGlobe, FaPhoneAlt, FaFacebookF, FaInstagram, FaWhatsapp, FaYoutube, FaLinkedinIn, FaChartBar } from 'react-icons/fa';
 
@@ -7,10 +7,16 @@ const AdminSettings: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [form, setForm] = useState({ ...settings });
 
-  const handleSave = () => {
-    updateSettings(form);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  useEffect(() => { setForm({ ...settings }); }, [settings]);
+
+  const handleSave = async () => {
+    try {
+      await updateSettings(form);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      // Error already handled in context
+    }
   };
 
   return (

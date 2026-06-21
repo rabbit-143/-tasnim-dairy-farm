@@ -3,6 +3,9 @@ import { useAdmin } from '../context/AdminContext';
 import type { BlogPost } from '../data/store';
 import { FaFileAlt, FaNewspaper, FaCalendarAlt, FaTimes, FaStar } from 'react-icons/fa';
 
+const API_BASE_URL = 'http://localhost:3001';
+const getImageUrl = (path: string | null | undefined): string | undefined => path?.startsWith('/uploads/') ? `${API_BASE_URL}${path}` : (path || undefined);
+
 const BlogPage: React.FC = () => {
   const { blogs } = useAdmin();
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -82,7 +85,7 @@ const BlogPage: React.FC = () => {
                 >
                   <div className="blog-img">
                     {post.image ? (
-                      <img src={post.image} alt={post.title} onError={e => { (e.target as HTMLImageElement).src = '/images/farm-overview.jpg'; }} />
+                      <img src={getImageUrl(post.image)} alt={post.title} onError={e => { (e.target as HTMLImageElement).src = '/images/farm-overview.jpg'; }} />
                     ) : (
                       <span style={{ fontSize: '3rem' }}><FaNewspaper size={48} /></span>
                     )}
@@ -139,7 +142,7 @@ const BlogPage: React.FC = () => {
             </div>
             {selectedPost.image && (
               <img
-                src={selectedPost.image}
+                src={getImageUrl(selectedPost.image)}
                 alt={selectedPost.title}
                 style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '16px', marginBottom: '1.5rem' }}
                 onError={e => { (e.target as HTMLImageElement).src = '/images/farm-overview.jpg'; }}

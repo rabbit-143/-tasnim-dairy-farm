@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { FaImages, FaTimes, FaSearch } from 'react-icons/fa';
 
+const API_BASE_URL = 'http://localhost:3001';
+const getImageUrl = (path: string): string => path.startsWith('/uploads/') ? `${API_BASE_URL}${path}` : path;
+
 const categories = ['All', 'Farm Images', 'Cattle Images', 'Production Images', 'Events'];
 
 const GalleryPage: React.FC = () => {
@@ -89,10 +92,10 @@ const GalleryPage: React.FC = () => {
                   key={item.id}
                   className="gallery-item scale-in"
                   style={{ transitionDelay: `${i * 0.08}s` }}
-                  onClick={() => setLightboxImg(item.image)}
+                  onClick={() => setLightboxImg(getImageUrl(item.image))}
                 >
                   <img
-                    src={item.image}
+                    src={getImageUrl(item.image)}
                     alt={item.title}
                     style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
                     onError={e => {

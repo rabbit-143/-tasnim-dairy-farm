@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { useAdmin } from '../context/AdminContext';
+import { useAdmin, API_BASE_URL } from '../context/AdminContext';
 import type { GalleryItem } from '../data/store';
 import { FaImages, FaTrash, FaTimes, FaSave, FaUpload } from 'react-icons/fa';
-
 const categories: GalleryItem['category'][] = ['Farm Images', 'Cattle Images', 'Production Images', 'Events'];
 
 const AdminGallery: React.FC = () => {
@@ -18,23 +17,43 @@ const AdminGallery: React.FC = () => {
 
   const filtered = filter === 'All' ? gallery : gallery.filter(g => g.category === filter);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
       alert('Only JPG, PNG, WEBP allowed.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = ev => setForm(p => ({ ...p, image: ev.target?.result as string }));
-    reader.readAsDataURL(file);
+    
+    try {
+      
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch(`${API_BASE_URL}/upload/image`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Upload failed');
+      
+      const data = await response.json();
+      setForm(p => ({ ...p, image: data.filepath }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image');
+    }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim() || !form.image) { alert('Title and image are required.'); return; }
-    addGalleryItem({ title: form.title, category: form.category, image: form.image, date: form.date });
-    setForm({ title: '', category: 'Farm Images', image: '', date: new Date().toISOString().split('T')[0] });
-    setShowForm(false);
+    try {
+      await addGalleryItem({ title: form.title, category: form.category, image: form.image, date: form.date });
+      setForm({ title: '', category: 'Farm Images', image: '', date: new Date().toISOString().split('T')[0] });
+      setShowForm(false);
+    } catch (error) {
+      // Error already handled in context
+    }
   };
 
   return (
@@ -63,7 +82,7 @@ const AdminGallery: React.FC = () => {
         {filtered.map(item => (
           <div key={item.id} style={{ background: '#ffffff', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
             <div style={{ height: '140px', overflow: 'hidden', position: 'relative' }}>
-              <img src={item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).src = '/images/farm-overview.jpg'; }} />
+              <img src={item.image.startsWith('/uploads') ? `http://localhost:3001${item.image}` : item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).src = '/images/farm-overview.jpg'; }} />
               <div style={{
                 position: 'absolute', top: '0.5rem', right: '0.5rem',
                 background: '#0F5D2F', color: 'white', fontSize: '0.65rem',
@@ -74,7 +93,7 @@ const AdminGallery: React.FC = () => {
               <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1a1a2e' }}>{item.title}</div>
               <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>{new Date(item.date).toLocaleDateString()}</div>
               <button
-                onClick={() => { if (confirm(`Delete "${item.title}"?`)) deleteGalleryItem(item.id); }}
+                onClick={async () => { if (confirm(`Delete "${item.title}"?`)) { try { await deleteGalleryItem(item.id); } catch (e) { /* handled in context */ } } }}
                 className="admin-btn-danger"
                 style={{ width: '100%', marginTop: '0.65rem' }}
               >
@@ -129,7 +148,7 @@ const AdminGallery: React.FC = () => {
                     style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                   />
                   {form.image && (
-                    <img src={form.image} alt="Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '10px', marginTop: '0.75rem' }} />
+                    <img src={form.image.startsWith('/uploads') ? `http://localhost:3001${form.image}` : form.image} alt="Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '10px', marginTop: '0.75rem' }} />
                   )}
                 </div>
               </div>

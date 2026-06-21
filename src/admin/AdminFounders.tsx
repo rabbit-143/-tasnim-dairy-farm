@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useAdmin } from '../context/AdminContext';
+import { useAdmin, API_BASE_URL } from '../context/AdminContext';
 import type { Founder } from '../data/store';
 import { FaPlus, FaEdit, FaTrash, FaTimes, FaSave, FaChevronRight, FaSpinner } from 'react-icons/fa';
-
-const API_BASE_URL = 'http://localhost:3001/api';
 
 const AdminFounders: React.FC = () => {
   const { founders, addFounder, updateFounder, deleteFounder, loading } = useAdmin();

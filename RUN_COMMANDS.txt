@@ -1,0 +1,111 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                   TASNIM DAIRY FARM - RUN COMMANDS                ║
+╚════════════════════════════════════════════════════════════════════╝
+
+✅ BACKEND IS ALREADY RUNNING
+
+Backend Server: http://localhost:3001
+Process: npm run dev (with nodemon)
+Status: ACTIVE NOW
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 STEP 1: START FRONTEND
+
+Open terminal in project root (where package.json is):
+
+    npm run dev
+
+This will start the frontend on:
+    http://localhost:5173
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 STEP 2: OPEN IN BROWSER
+
+Go to: http://localhost:5173
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔐 STEP 3: LOGIN TO ADMIN
+
+Username: admin
+Password: tasnim@2026
+
+Click Login
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ STEP 4: USE THE APPLICATION
+
+Now you can:
+✓ Add new blog posts
+✓ Upload gallery images
+✓ Create career postings
+✓ Update site settings
+✓ View founder information
+
+All changes are saved to the database automatically!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📌 USEFUL URLs
+
+Frontend:     http://localhost:5173
+Admin Panel:  http://localhost:5173 (after login)
+Backend API:  http://localhost:3001/api
+Health Check: http://localhost:3001/api/health
+Uploads:      http://localhost:3001/uploads/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 IF BACKEND STOPS
+
+Backend is running with nodemon (auto-reload).
+If it stops for any reason:
+
+1. Open new terminal
+2. Navigate to project backend folder:
+   cd backend
+
+3. Start it again:
+   npm run dev
+
+It will restart on port 3001
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🛑 TO STOP APPLICATIONS
+
+Frontend:
+- Press Ctrl + C in frontend terminal
+
+Backend:
+- Press Ctrl + C in backend terminal
+(Will restart with nodemon, press Ctrl + C again to fully stop)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 KEY FOLDERS
+
+backend/
+├── database.js          ← Database setup
+├── server.js           ← API server
+├── routes/             ← API endpoints
+├── uploads/            ← Uploaded images
+└── tasnim.db           ← Database file
+
+src/
+├── context/            ← API integration
+├── admin/              ← Admin pages
+└── components/         ← UI components
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ THAT'S IT!
+
+Just run: npm run dev
+
+Everything else is ready to go! 🚀
+
+═════════════════════════════════════════════════════════════════════

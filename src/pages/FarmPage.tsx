@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { FaHome, FaWarehouse, FaLeaf, FaFlask, FaBroom, FaTrophy, FaGlobe, FaHeart, FaCheck } from 'react-icons/fa';
+import { FaHome, FaWarehouse, FaLeaf, FaFlask, FaBroom, FaTrophy, FaGlobe, FaHeart } from 'react-icons/fa';
 import { GiCow, GiMilkCarton } from 'react-icons/gi';
 
 const FarmPage: React.FC = () => {
@@ -101,9 +101,8 @@ const FarmPage: React.FC = () => {
             gridTemplateColumns: '1fr 1fr',
             gap: '4rem',
             alignItems: 'center',
-            direction: i % 2 === 0 ? 'ltr' : 'rtl',
           }}>
-            <div className={i % 2 === 0 ? 'fade-left' : 'fade-right'} style={{ direction: 'ltr' }}>
+            <div className={i % 2 === 0 ? 'fade-left' : 'fade-right'} style={{ order: i % 2 === 0 ? 1 : 2 }}>
               <div style={{
                 display: 'inline-flex', gap: '0.75rem', alignItems: 'center',
                 background: '#0F5D2F12', padding: '0.5rem 1rem', borderRadius: '50px',
@@ -133,7 +132,7 @@ const FarmPage: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div className={i % 2 === 0 ? 'fade-right' : 'fade-left'} style={{ direction: 'ltr' }}>
+            <div className={i % 2 === 0 ? 'fade-right' : 'fade-left'} style={{ order: i % 2 === 0 ? 2 : 1 }}>
               <div style={{ position: 'relative' }}>
                 <img
                   src={section.image}

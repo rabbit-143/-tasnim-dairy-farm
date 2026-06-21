@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAdmin } from '../context/AdminContext';
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaComment, FaCheckCircle, FaPaperPlane, FaTimes, FaFacebookF, FaInstagram, FaWhatsapp, FaYoutube, FaLinkedinIn } from 'react-icons/fa';
+import { useAdmin, API_BASE_URL } from '../context/AdminContext';
+import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaComment, FaCheckCircle, FaPaperPlane, FaFacebookF, FaInstagram, FaWhatsapp, FaYoutube, FaLinkedinIn } from 'react-icons/fa';
 
 const ContactPage: React.FC = () => {
   const { settings } = useAdmin();
@@ -18,11 +18,24 @@ const ContactPage: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
-    setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (response.ok) {
+        setSubmitted(true);
+        setForm({ name: '', email: '', phone: '', subject: '', message: '' });
+        setTimeout(() => setSubmitted(false), 4000);
+      } else {
+        alert('Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      alert('Failed to connect to server. Make sure the backend is running.');
+    }
   };
 
   return (
