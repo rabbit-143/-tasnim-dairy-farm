@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { MdDashboard } from 'react-icons/md';
-import { FaInfoCircle, FaUsers, FaImages, FaFileAlt, FaBriefcase, FaCog, FaHome, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { FaInfoCircle, FaUsers, FaImages, FaFileAlt, FaBriefcase, FaCog, FaHome, FaSignOutAlt, FaUser, FaEnvelope } from 'react-icons/fa';
 import AdminLogin from '../admin/AdminLogin';
 import AdminDashboard from '../admin/AdminDashboard';
 import AdminFounders from '../admin/AdminFounders';
@@ -10,8 +10,9 @@ import AdminGallery from '../admin/AdminGallery';
 import AdminCareers from '../admin/AdminCareers';
 import AdminSettings from '../admin/AdminSettings';
 import AdminAbout from '../admin/AdminAbout';
+import AdminMessages from '../admin/AdminMessages';
 
-type AdminPage = 'dashboard' | 'founders' | 'blogs' | 'gallery' | 'careers' | 'settings' | 'about';
+type AdminPage = 'dashboard' | 'founders' | 'blogs' | 'gallery' | 'careers' | 'settings' | 'about' | 'messages';
 
 interface AdminPanelProps {
   setCurrentPage: (page: string) => void;
@@ -28,6 +29,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ setCurrentPage }) => {
 
   const navItems: { id: AdminPage; icon: React.ReactNode; label: string }[] = [
     { id: 'dashboard', icon: <MdDashboard size={18} />, label: 'Dashboard' },
+    { id: 'messages', icon: <FaEnvelope size={18} />, label: 'Messages' },
     { id: 'about', icon: <FaInfoCircle size={18} />, label: 'About & Vision' },
     { id: 'founders', icon: <FaUsers size={18} />, label: 'Founders' },
     { id: 'gallery', icon: <FaImages size={18} />, label: 'Gallery' },
@@ -39,6 +41,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ setCurrentPage }) => {
   const renderPage = () => {
     switch (adminPage) {
       case 'dashboard': return <AdminDashboard setAdminPage={setAdminPage} />;
+      case 'messages': return <AdminMessages />;
       case 'founders': return <AdminFounders />;
       case 'blogs': return <AdminBlogs />;
       case 'gallery': return <AdminGallery />;

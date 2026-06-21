@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../context/AdminContext';
-import { FaFileAlt, FaCamera, FaBriefcase, FaStar, FaUserFriends, FaCalendarAlt, FaChartLine, FaUsers } from 'react-icons/fa';
+import { FaFileAlt, FaCamera, FaBriefcase, FaStar, FaUserFriends, FaCalendarAlt, FaChartLine, FaUsers, FaEnvelope } from 'react-icons/fa';
 import { GiCow, GiMilkCarton } from 'react-icons/gi';
 
-type AdminPage = 'dashboard' | 'founders' | 'blogs' | 'gallery' | 'careers' | 'settings' | 'about';
+type AdminPage = 'dashboard' | 'founders' | 'blogs' | 'gallery' | 'careers' | 'settings' | 'about' | 'messages';
 
 interface Props {
   setAdminPage: (page: AdminPage) => void;
@@ -11,14 +11,39 @@ interface Props {
 
 const AdminDashboard: React.FC<Props> = ({ setAdminPage }) => {
   const { blogs, gallery, careers, founders, settings } = useAdmin();
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/contact/messages');
+        if (response.ok) {
+          const data = await response.json();
+          const unread = data.filter((m: any) => !m.is_read).length;
+          setUnreadMessages(unread);
+        }
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const careersArray = Array.isArray(careers) ? careers : [];
+  const blogsArray = Array.isArray(blogs) ? blogs : [];
+  const galleryArray = Array.isArray(gallery) ? gallery : [];
+  const foundersArray = Array.isArray(founders) ? founders : [];
 
   const stats = [
-    { icon: <FaFileAlt size={36} />, label: 'Blog Posts', value: blogs.length, page: 'blogs', color: '#0F5D2F' },
-    { icon: <FaCamera size={36} />, label: 'Gallery Images', value: gallery.length, page: 'gallery', color: '#D4AF37' },
-    { icon: <FaBriefcase size={36} />, label: 'Job Postings', value: careers.filter(c => c.active).length, page: 'careers', color: '#0F5D2F' },
-    { icon: <FaStar size={36} />, label: 'Founders', value: founders.length, page: 'founders', color: '#D4AF37' },
+    { icon: <FaFileAlt size={36} />, label: 'Blog Posts', value: blogsArray.length, page: 'blogs', color: '#0F5D2F' },
+    { icon: <FaCamera size={36} />, label: 'Gallery Images', value: galleryArray.length, page: 'gallery', color: '#D4AF37' },
+    { icon: <FaBriefcase size={36} />, label: 'Job Postings', value: careersArray.filter(c => c.active).length, page: 'careers', color: '#0F5D2F' },
+    { icon: <FaStar size={36} />, label: 'Founders', value: foundersArray.length, page: 'founders', color: '#D4AF37' },
+    { icon: <FaEnvelope size={36} />, label: 'New Messages', value: unreadMessages, page: 'messages', color: unreadMessages > 0 ? '#ef4646' : '#0F5D2F' },
     { icon: <FaUserFriends size={36} />, label: 'Visitors', value: settings.visitors.toLocaleString(), page: 'settings', color: '#0F5D2F' },
-    { icon: <GiMilkCarton size={36} />, label: 'Daily Production', value: '100 L', page: 'about', color: '#D4AF37' },
   ];
 
   return (
@@ -77,7 +102,7 @@ const AdminDashboard: React.FC<Props> = ({ setAdminPage }) => {
             <FaFileAlt size={20} /> Recent Blog Posts
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {blogs.slice(0, 3).map(blog => (
+            {blogsArray.slice(0, 3).map(blog => (
               <div key={blog.id} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 padding: '0.75rem', background: '#F8F9FA', borderRadius: '10px',
@@ -89,7 +114,7 @@ const AdminDashboard: React.FC<Props> = ({ setAdminPage }) => {
                 {blog.featured && <span style={{ background: '#D4AF3720', color: '#D4AF37', fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '50px' }}>Featured</span>}
               </div>
             ))}
-            {blogs.length === 0 && <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>No blog posts yet.</p>}
+            {blogsArray.length === 0 && <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>No blog posts yet.</p>}
           </div>
           <button onClick={() => setAdminPage('blogs')} className="admin-btn-primary" style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }}>
             Manage Blogs
@@ -102,7 +127,7 @@ const AdminDashboard: React.FC<Props> = ({ setAdminPage }) => {
             <FaBriefcase size={20} /> Active Job Postings
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {careers.filter(c => c.active).slice(0, 3).map(job => (
+            {careersArray.filter(c => c.active).slice(0, 3).map(job => (
               <div key={job.id} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 padding: '0.75rem', background: '#F8F9FA', borderRadius: '10px',
@@ -114,7 +139,7 @@ const AdminDashboard: React.FC<Props> = ({ setAdminPage }) => {
                 <span style={{ background: '#0F5D2F20', color: '#0F5D2F', fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '50px' }}>Active</span>
               </div>
             ))}
-            {careers.filter(c => c.active).length === 0 && <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>No active job postings.</p>}
+            {careersArray.filter(c => c.active).length === 0 && <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>No active job postings.</p>}
           </div>
           <button onClick={() => setAdminPage('careers')} className="admin-btn-primary" style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }}>
             Manage Careers

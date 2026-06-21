@@ -5,11 +5,12 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
+const allowedOrigins = process.env.CORS_ORIGIN || 'http://localhost:5173';
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: allowedOrigins.split(',').map(s => s.trim()),
   credentials: true
 }));
 app.use(express.json());
@@ -77,12 +78,14 @@ const blogsRouter = require('./routes/blogs');
 const galleryRouter = require('./routes/gallery');
 const careersRouter = require('./routes/careers');
 const settingsRouter = require('./routes/settings');
+const contactRouter = require('./routes/contact');
 
 app.use('/api/founders', foundersRouter);
 app.use('/api/blogs', blogsRouter);
 app.use('/api/gallery', galleryRouter);
 app.use('/api/careers', careersRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/contact', contactRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -108,13 +111,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`
+// Wait for database then start server
+const { initPromise } = require('./database');
+initPromise.then(() => {
+  app.listen(PORT, () => {
+    console.log(`
 ╔═══════════════════════════════════════════════════╗
 ║   Tasnim Dairy Farm Backend API                   ║
 ║   Server running on http://localhost:${PORT}      ║
 ║   Frontend: http://localhost:5173                 ║
 ╚═══════════════════════════════════════════════════╝
-  `);
+    `);
+  });
 });
