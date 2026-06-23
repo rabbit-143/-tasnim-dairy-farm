@@ -4,7 +4,16 @@ import {
   defaultSettings, defaultGrowthStats
 } from '../data/store';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Backend API base URL
+const getApiUrl = () => {
+  try {
+    return (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
+  } catch {
+    return 'http://localhost:3000/api';
+  }
+};
+
+export const API_BASE_URL = getApiUrl();
 
 // Fallback mock data for when backend is offline
 const MOCK_DATA = {
@@ -13,38 +22,38 @@ const MOCK_DATA = {
       id: 1,
       name: 'Mobasshera Sultana',
       role: 'Founder & CEO',
-      responsibilities: JSON.stringify(['Strategic Leadership', 'Farm Management', 'Growth Planning']),
+      responsibilities: ['Strategic Leadership', 'Farm Management', 'Growth Planning'],
       image: '/images/Founder & CEO.png'
     },
     {
       id: 2,
       name: 'Johirul Islam',
       role: 'Founder & CO',
-      responsibilities: JSON.stringify(['Operations', 'Expansion Planning', 'Resource Management']),
+      responsibilities: ['Operations', 'Expansion Planning', 'Resource Management'],
       image: '/images/Founder & CO.png'
     },
     {
       id: 3,
       name: 'Rakibul Hasan Rahat',
       role: 'Founder & Marketing Lead',
-      responsibilities: JSON.stringify(['Branding', 'Marketing', 'Public Relations']),
+      responsibilities: ['Branding', 'Marketing', 'Public Relations'],
       image: '/images/Founder & Marketing Lead.png'
     },
     {
       id: 4,
       name: 'Anjhum Akter',
       role: 'Founder & Accountant',
-      responsibilities: JSON.stringify(['Financial Management', 'Accounting', 'Budget Planning']),
+      responsibilities: ['Financial Management', 'Accounting', 'Budget Planning'],
       image: '/images/Founder & Accountant.png'
     },
     {
       id: 5,
       name: 'Etheka Ariyana',
       role: 'Brand Ambassador',
-      responsibilities: JSON.stringify(['Brand Representation', 'Public Relations', 'Community Engagement']),
+      responsibilities: ['Brand Representation', 'Public Relations', 'Community Engagement'],
       image: '/images/Brand Ambassador.png'
     }
-  ],
+  ] as Founder[],
   settings: {
     id: 1,
     siteName: 'Tasnim Dairy Farm',
@@ -60,9 +69,9 @@ const MOCK_DATA = {
     linkedin: 'https://linkedin.com',
     aboutContent: 'Tasnim Dairy Farm was established on 14 February 2026 with a vision to revolutionize dairy farming in Bangladesh.',
     vision: 'To become one of the most trusted dairy farms in Bangladesh',
-    mission: JSON.stringify(['Produce healthy and pure milk', 'Maintain the highest farm hygiene standards', 'Ensure animal welfare and ethical treatment']),
+    mission: ['Produce healthy and pure milk', 'Maintain the highest farm hygiene standards', 'Ensure animal welfare and ethical treatment'],
     visitors: 10482
-  }
+  } as SiteSettings
 };
 
 interface AdminContextType {
@@ -129,41 +138,51 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setLoading(true);
       
-      // Try to fetch from backend
+      // Helper to safely fetch with type narrowing
+      const safeFetch = async (url: string) => {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return null;
+          return res;
+        } catch {
+          return null;
+        }
+      };
+
       const [foundersRes, blogsRes, galleryRes, careersRes, settingsRes, messagesRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/founders`).catch(() => ({ ok: false })),
-        fetch(`${API_BASE_URL}/blogs`).catch(() => ({ ok: false })),
-        fetch(`${API_BASE_URL}/gallery`).catch(() => ({ ok: false })),
-        fetch(`${API_BASE_URL}/careers`).catch(() => ({ ok: false })),
-        fetch(`${API_BASE_URL}/settings`).catch(() => ({ ok: false })),
-        fetch(`${API_BASE_URL}/contact/messages`).catch(() => ({ ok: false })),
+        safeFetch(`${API_BASE_URL}/founders`),
+        safeFetch(`${API_BASE_URL}/blogs`),
+        safeFetch(`${API_BASE_URL}/gallery`),
+        safeFetch(`${API_BASE_URL}/careers`),
+        safeFetch(`${API_BASE_URL}/settings`),
+        safeFetch(`${API_BASE_URL}/contact/messages`),
       ]);
 
       // Use mock data if backend is down
-      if (foundersRes.ok) setFounders(await foundersRes.json());
+      if (foundersRes) setFounders(await foundersRes.json());
       else setFounders(MOCK_DATA.founders);
       
-      if (blogsRes.ok) setBlogs(await blogsRes.json());
+      if (blogsRes) setBlogs(await blogsRes.json());
       else setBlogs([]);
       
-      if (galleryRes.ok) setGallery(await galleryRes.json());
+      if (galleryRes) setGallery(await galleryRes.json());
       else setGallery([]);
       
-      if (careersRes.ok) setCareers(await careersRes.json());
+      if (careersRes) setCareers(await careersRes.json());
       else setCareers([]);
       
-      if (settingsRes.ok) {
+      if (settingsRes) {
         const settingsData = await settingsRes.json();
         setSettings(settingsData);
       } else {
         setSettings(MOCK_DATA.settings);
       }
       
-      if (messagesRes.ok) setMessages(await messagesRes.json());
+      if (messagesRes) setMessages(await messagesRes.json());
       else setMessages([]);
       
       // Show warning if backend is down
-      if (!foundersRes.ok || !settingsRes.ok) {
+      if (!foundersRes || !settingsRes) {
         console.warn('⚠️ Backend API is offline - using mock data. Contact forms will not be saved.');
       }
     } catch (error) {
