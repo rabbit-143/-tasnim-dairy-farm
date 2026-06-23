@@ -4,8 +4,66 @@ import {
   defaultSettings, defaultGrowthStats
 } from '../data/store';
 
-// Backend API base URL
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+// Fallback mock data for when backend is offline
+const MOCK_DATA = {
+  founders: [
+    {
+      id: 1,
+      name: 'Mobasshera Sultana',
+      role: 'Founder & CEO',
+      responsibilities: JSON.stringify(['Strategic Leadership', 'Farm Management', 'Growth Planning']),
+      image: '/images/Founder & CEO.png'
+    },
+    {
+      id: 2,
+      name: 'Johirul Islam',
+      role: 'Founder & CO',
+      responsibilities: JSON.stringify(['Operations', 'Expansion Planning', 'Resource Management']),
+      image: '/images/Founder & CO.png'
+    },
+    {
+      id: 3,
+      name: 'Rakibul Hasan Rahat',
+      role: 'Founder & Marketing Lead',
+      responsibilities: JSON.stringify(['Branding', 'Marketing', 'Public Relations']),
+      image: '/images/Founder & Marketing Lead.png'
+    },
+    {
+      id: 4,
+      name: 'Anjhum Akter',
+      role: 'Founder & Accountant',
+      responsibilities: JSON.stringify(['Financial Management', 'Accounting', 'Budget Planning']),
+      image: '/images/Founder & Accountant.png'
+    },
+    {
+      id: 5,
+      name: 'Etheka Ariyana',
+      role: 'Brand Ambassador',
+      responsibilities: JSON.stringify(['Brand Representation', 'Public Relations', 'Community Engagement']),
+      image: '/images/Brand Ambassador.png'
+    }
+  ],
+  settings: {
+    id: 1,
+    siteName: 'Tasnim Dairy Farm',
+    tagline: 'Pure Milk, Pure Promise',
+    phone: '+880 1700-000000',
+    email: 'info@tasnimdairyfarm.com',
+    address: 'Tasnim Dairy Farm Complex, Dhaka, Bangladesh',
+    mapEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3648.3197948897306!2d90.36914952346814!3d23.810255589999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755c7212f5f5f5f%3A0x5f5f5f5f5f5f5f5f!2sTasnim%20Dairy%20Farm!5e0!3m2!1sen!2sbd!4v1234567890',
+    facebook: 'https://facebook.com',
+    instagram: 'https://instagram.com',
+    whatsapp: 'https://wa.me/8801700000000',
+    youtube: 'https://youtube.com',
+    linkedin: 'https://linkedin.com',
+    aboutContent: 'Tasnim Dairy Farm was established on 14 February 2026 with a vision to revolutionize dairy farming in Bangladesh.',
+    vision: 'To become one of the most trusted dairy farms in Bangladesh',
+    mission: JSON.stringify(['Produce healthy and pure milk', 'Maintain the highest farm hygiene standards', 'Ensure animal welfare and ethical treatment']),
+    visitors: 10482
+  }
+};
 
 interface AdminContextType {
   isAdminLoggedIn: boolean;
@@ -71,28 +129,48 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       setLoading(true);
       
-      // Fetch all data in parallel
+      // Try to fetch from backend
       const [foundersRes, blogsRes, galleryRes, careersRes, settingsRes, messagesRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/founders`),
-        fetch(`${API_BASE_URL}/blogs`),
-        fetch(`${API_BASE_URL}/gallery`),
-        fetch(`${API_BASE_URL}/careers`),
-        fetch(`${API_BASE_URL}/settings`),
-        fetch(`${API_BASE_URL}/contact/messages`),
+        fetch(`${API_BASE_URL}/founders`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE_URL}/blogs`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE_URL}/gallery`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE_URL}/careers`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE_URL}/settings`).catch(() => ({ ok: false })),
+        fetch(`${API_BASE_URL}/contact/messages`).catch(() => ({ ok: false })),
       ]);
 
+      // Use mock data if backend is down
       if (foundersRes.ok) setFounders(await foundersRes.json());
+      else setFounders(MOCK_DATA.founders);
+      
       if (blogsRes.ok) setBlogs(await blogsRes.json());
+      else setBlogs([]);
+      
       if (galleryRes.ok) setGallery(await galleryRes.json());
+      else setGallery([]);
+      
       if (careersRes.ok) setCareers(await careersRes.json());
+      else setCareers([]);
+      
       if (settingsRes.ok) {
         const settingsData = await settingsRes.json();
-        setSettings(settingsData); // It's already a single object
+        setSettings(settingsData);
+      } else {
+        setSettings(MOCK_DATA.settings);
       }
+      
       if (messagesRes.ok) setMessages(await messagesRes.json());
+      else setMessages([]);
+      
+      // Show warning if backend is down
+      if (!foundersRes.ok || !settingsRes.ok) {
+        console.warn('⚠️ Backend API is offline - using mock data. Contact forms will not be saved.');
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
-      alert('Failed to load data from server. Make sure backend is running.');
+      // Use mock data on error
+      setFounders(MOCK_DATA.founders);
+      setSettings(MOCK_DATA.settings);
     } finally {
       setLoading(false);
     }
