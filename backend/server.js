@@ -3,6 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { pool, initializeDatabase } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -111,16 +112,31 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-// Wait for database then start server
-const { initPromise } = require('./database');
-initPromise.then(() => {
-  app.listen(PORT, () => {
-    console.log(`
+// Start server
+async function startServer() {
+  try {
+    await initializeDatabase();
+    
+    app.listen(PORT, () => {
+      console.log(`
 ╔═══════════════════════════════════════════════════╗
-║   Tasnim Dairy Farm Backend API                   ║
+║   Tasnim Dairy Farm Backend API (PostgreSQL)      ║
 ║   Server running on http://localhost:${PORT}      ║
-║   Frontend: http://localhost:5173                 ║
+║   Frontend: ${process.env.CORS_ORIGIN || 'http://localhost:5173'}                 ║
 ╚═══════════════════════════════════════════════════╝
-    `);
-  });
+      `);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  pool.end();
+  console.log('Database connection closed');
+  process.exit(0);
 });
