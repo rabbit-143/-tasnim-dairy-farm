@@ -105,6 +105,7 @@ interface AdminContextType {
   growthStats: GrowthStat[];
   updateGrowthStat: (index: number, stat: Partial<GrowthStat>) => void;
   loading: boolean;
+  refetchFounders: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -573,6 +574,21 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setGrowthStats(prev => prev.map((s, i) => i === index ? { ...s, ...stat } : s));
   };
 
+  const refetchFounders = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/founders`);
+      if (res.ok) {
+        const data = await res.json();
+        setFounders(data);
+      } else {
+        setFounders(MOCK_DATA.founders);
+      }
+    } catch (error) {
+      console.error('Error refetching founders:', error);
+      setFounders(MOCK_DATA.founders);
+    }
+  };
+
   return (
     <AdminContext.Provider value={{
       isAdminLoggedIn, loginAdmin, logoutAdmin,
@@ -584,6 +600,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       messages, setMessages, fetchMessages, markMessageAsRead, deleteMessage,
       growthStats, updateGrowthStat,
       loading,
+      refetchFounders,
     }}>
       {children}
     </AdminContext.Provider>

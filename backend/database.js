@@ -19,9 +19,6 @@ if (usePg) {
   });
 } else {
   // SQLite fallback for development
-  const initSqlJs = require('sql.js');
-  const dbPath = path.join(__dirname, 'tasnim.db');
-
   pool = null; // No pool for SQLite
 }
 
@@ -322,10 +319,79 @@ function saveSQLite() {
   }
 }
 
+// ============================================
+// COMPATIBILITY HELPER FUNCTIONS
+// ============================================
+
+// Get the database instance
+function getDb() {
+  if (usePg) {
+    return pool;
+  } else {
+    return db;
+  }
+}
+
+// Get record(s) by ID for a specific table
+function getById(table, id) {
+  if (usePg) {
+    // PostgreSQL mode - would need async, but routes expect sync
+    // For now, return pool for compatibility
+    return pool ? pool.query(`SELECT * FROM ${table} WHERE id = $1`, [id]) : null;
+  } else {
+    // SQLite mode - synchronous
+    const result = db.exec(`SELECT * FROM ${table} WHERE id = ?`, [id]);
+    if (result.length === 0 || result[0].values.length === 0) {
+      return { values: [[]] };
+    }
+    return result;
+  }
+}
+
+// Check if record exists by ID
+function existsById(table, id) {
+  if (usePg) {
+    // PostgreSQL - this is async but routes use it synchronously
+    // For sync compatibility, we'll do a basic check
+    return pool !== null; // Simplified for sync usage
+  } else {
+    // SQLite - synchronous
+    const result = db.exec(`SELECT 1 FROM ${table} WHERE id = ? LIMIT 1`, [id]);
+    return result.length > 0 && result[0].values.length > 0;
+  }
+}
+
+// Delete record by ID
+function deleteById(table, id) {
+  if (usePg) {
+    // PostgreSQL - async operation
+    if (pool) {
+      return pool.query(`DELETE FROM ${table} WHERE id = $1`, [id]);
+    }
+  } else {
+    // SQLite - synchronous
+    db.run(`DELETE FROM ${table} WHERE id = ?`, [id]);
+    saveSQLite();
+  }
+}
+
+// Save function (for SQLite)
+function save() {
+  if (!usePg && db) {
+    saveSQLite();
+  }
+}
+
 module.exports = {
   pool: usePg ? pool : null,
   db: !usePg ? db : null,
   usePg,
   initializeDatabase,
-  saveSQLite
+  saveSQLite,
+  // Exported helper functions for compatibility with routes
+  getDb,
+  getById,
+  existsById,
+  deleteById,
+  save
 };

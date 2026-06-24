@@ -45,13 +45,39 @@ const StatCounter: React.FC<{ end: number; suffix?: string; label: string; icon:
 };
 
 const HomePage: React.FC = () => {
-  const { settings, founders, blogs } = useAdmin();
+  const { settings, founders, blogs, refetchFounders } = useAdmin();
   const pageRef = useScrollAnimation();
+  const foundersRef = useRef<HTMLDivElement>(null);
   const [heroLoaded, setHeroLoaded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     setTimeout(() => setHeroLoaded(true), 100);
+  }, []);
+
+  // Refetch founders on mount and preload images
+  useEffect(() => {
+    refetchFounders();
+  }, []);
+
+  // Preload founder images
+  useEffect(() => {
+    founders.forEach(founder => {
+      if (founder.image) {
+        const img = new Image();
+        img.src = founder.image;
+      }
+    });
+  }, [founders]);
+
+  // Auto-scroll to founders section if coming from founders page
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('scrollTo') === 'founders' && foundersRef.current) {
+      setTimeout(() => {
+        foundersRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
   }, []);
 
   const handleNavigate = (path: string) => {
@@ -185,7 +211,7 @@ const HomePage: React.FC = () => {
             <p className="section-desc">Tracking our journey from a small operation to a thriving dairy enterprise.</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 180px))', gap: '1.25rem', justifyContent: 'center' }}>
             <div className="scale-in" style={{ animationDelay: '0s' }}>
               <StatCounter end={2026} label="Established" icon={<FaCalendarAlt />} />
             </div>
@@ -331,7 +357,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* ======================== FOUNDERS PREVIEW ======================== */}
-      <section style={{ background: '#F8F9FA', padding: '5rem 1.5rem' }}>
+      <section style={{ background: '#F8F9FA', padding: '5rem 1.5rem' }} ref={foundersRef}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div className="section-header fade-up">
             <div className="section-badge"><FaStar size={14} style={{ marginRight: '0.5rem' }} /> Our Team</div>
