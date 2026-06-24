@@ -1,0 +1,16 @@
+[build]
+  command = "npm install && npm run build"
+  publish = "dist"
+
+[env.production]
+  [env.production.context]
+    environment = { VITE_API_URL = "https://tasnim-dairy-farm-api.up.railway.app" }
+
+[env.development]
+  [env.development.context]
+    environment = { VITE_API_URL = "http://localhost:3000" }
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
