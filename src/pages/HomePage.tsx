@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '../context/AdminContext';
 import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
+import foundersTeamImage from '../assets/images/Founders-Team.jpg';
 // CHANGED: Removed GiCow from hero badge import, but kept it for Farm Section Preview
 import { GiCow, GiMilkCarton } from 'react-icons/gi';
 import { FaHome, FaPhone, FaChartBar, FaCalendarAlt, FaChartLine, FaUsers, FaStar, FaBullseye, FaWarehouse, FaLeaf, FaFlask, FaBroom, FaEye, FaCheck, FaFileAlt, FaBriefcase, FaChevronDown } from 'react-icons/fa';
@@ -378,7 +379,7 @@ const HomePage: React.FC = () => {
             }}
           >
             <img 
-              src="/images/Founders%20Team.jpg" 
+              src={foundersTeamImage}
               alt="Meet Our Founders" 
               style={{
                 width: '100%',
