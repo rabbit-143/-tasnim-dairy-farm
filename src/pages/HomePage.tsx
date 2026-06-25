@@ -378,7 +378,7 @@ const HomePage: React.FC = () => {
             }}
           >
             <img 
-              src="/images/Founders Team.jpg" 
+              src="/images/Founders%20Team.jpg" 
               alt="Meet Our Founders" 
               style={{
                 width: '100%',
