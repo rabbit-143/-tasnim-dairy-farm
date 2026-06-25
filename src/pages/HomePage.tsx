@@ -45,7 +45,7 @@ const StatCounter: React.FC<{ end: number; suffix?: string; label: string; icon:
 };
 
 const HomePage: React.FC = () => {
-  const { settings, founders, blogs, refetchFounders } = useAdmin();
+  const { settings, blogs } = useAdmin();
   const pageRef = useScrollAnimation();
   const foundersRef = useRef<HTMLDivElement>(null);
   const [heroLoaded, setHeroLoaded] = useState(false);
@@ -55,20 +55,6 @@ const HomePage: React.FC = () => {
     setTimeout(() => setHeroLoaded(true), 100);
   }, []);
 
-  // Refetch founders on mount and preload images
-  useEffect(() => {
-    refetchFounders();
-  }, []);
-
-  // Preload founder images
-  useEffect(() => {
-    founders.forEach(founder => {
-      if (founder.image) {
-        const img = new Image();
-        img.src = founder.image;
-      }
-    });
-  }, [founders]);
 
   // Auto-scroll to founders section if coming from founders page
   useEffect(() => {
@@ -360,44 +346,52 @@ const HomePage: React.FC = () => {
       <section style={{ background: '#F8F9FA', padding: '5rem 1.5rem' }} ref={foundersRef}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div className="section-header fade-up">
-            <div className="section-badge"><FaStar size={14} style={{ marginRight: '0.5rem' }} /> Our Team</div>
-            <h2 className="section-title">Meet the <span className="section-title-accent">Founders</span></h2>
+            <h2 className="section-title">Meet Our <span className="section-title-accent">Founders</span></h2>
             <div className="section-divider">
               <div className="divider-line" />
               <div className="divider-dot" />
               <div className="divider-line right" />
             </div>
-            <p className="section-desc">Four passionate individuals who dared to dream of pure milk for all.</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-            {founders.map((founder, i) => (
-              <div key={founder.id} className={`founder-card fade-up`} style={{ transitionDelay: `${i * 0.1}s` }}>
-                <div className="founder-img-wrapper">
-                  {founder.image ? (
-                    <img src={founder.image} alt={founder.name} className="founder-img" />
-                  ) : (
-                    <div className="founder-placeholder">
-                      {founder.name.charAt(0)}
-                    </div>
-                  )}
-                </div>
-                <div className="founder-info">
-                  <div className="founder-name">{founder.name}</div>
-                  <div className="founder-role">{founder.role}</div>
-                  <ul className="founder-responsibilities">
-                    {founder.responsibilities.map((r, ri) => (
-                      <li key={ri}>{r}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
+          {/* Responsive Banner with Hover Effect */}
+          <div 
+            className="fade-up"
+            onClick={() => handleNavigate('/founders')}
+            style={{
+              marginTop: '2rem',
+              cursor: 'pointer',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = 'scale(1.02)';
+              el.style.boxShadow = '0 30px 70px rgba(0,0,0,0.25)';
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.transform = 'scale(1)';
+              el.style.boxShadow = '0 20px 50px rgba(0,0,0,0.15)';
+            }}
+          >
+            <img 
+              src="/images/Founders Team.jpg" 
+              alt="Meet Our Founders" 
+              style={{
+                width: '100%',
+                height: 'clamp(300px, 50vw, 600px)',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
             <button className="btn-primary" onClick={() => handleNavigate('/founders')}>
-              View All Details →
+              View Founder Details →
             </button>
           </div>
         </div>
