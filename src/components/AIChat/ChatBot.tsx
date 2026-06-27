@@ -12,6 +12,13 @@ interface Message {
   timestamp: Date;
 }
 
+/**
+ * Enhanced ChatBot with Gemini AI Integration
+ * - Uses Google Gemini API for real AI responses
+ * - Secure API key from environment variables
+ * - Cow mascot as assistant icon
+ * - Premium glassmorphism design
+ */
 const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -19,7 +26,7 @@ const ChatBot: React.FC = () => {
     {
       id: '1',
       type: 'bot',
-      content: 'আস্সালামু আলাইকুম! 👋 আমি তাসনিম ডেইরি ফার্মের AI সহায়ক। আপনি কি জানতে চান?',
+      content: 'আস্সালামু আলাইকুম! 👋 আমি Tasnim AI, তাসনিম ডেইরি ফার্মের সহায়ক। আপনি কি জানতে চান?',
       timestamp: new Date(),
     },
   ]);
@@ -33,6 +40,58 @@ const ChatBot: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  /**
+   * Call Gemini API for AI response
+   */
+  const callGeminiAPI = async (userMessage: string): Promise<string> => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      return 'আফসোস, API কী সেট করা নেই। কনফিগারেশন চেক করুন।';
+    }
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `You are Tasnim AI, a helpful assistant for Tasnim Dairy Farm. Answer in Bengali if the user writes in Bengali, English if in English. Be friendly, helpful, and professional. Context: You help with information about dairy farming, our products, and company information.\n\nUser message: ${userMessage}`,
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              maxOutputTokens: 500,
+              temperature: 0.7,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Gemini API Error:', error);
+        return 'আপনার প্রশ্নের উত্তর দিতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
+      }
+
+      const data = await response.json();
+      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      return aiResponse || 'কোন প্রতিক্রিয়া পাওয়া যায়নি।';
+    } catch (error) {
+      console.error('Error calling Gemini API:', error);
+      return 'সার্ভারে সংযোগ বিচ্ছিন্ন হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
+    }
+  };
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -48,17 +107,18 @@ const ChatBot: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'bot',
-        content: `আপনার প্রশ্ন: "${text}" এর উত্তর দিতে আমি এখানে আছি। আমাদের দলের সাথে যোগাযোগ করতে আমরা আপনাকে সাহায্য করতে পারি।`,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, botMessage]);
-      setIsLoading(false);
-    }, 1000);
+    // Get AI response from Gemini
+    const aiResponse = await callGeminiAPI(text);
+    
+    const botMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      type: 'bot',
+      content: aiResponse,
+      timestamp: new Date(),
+    };
+    
+    setMessages(prev => [...prev, botMessage]);
+    setIsLoading(false);
   };
 
   const handleClose = () => {
@@ -75,7 +135,8 @@ const ChatBot: React.FC = () => {
       <button
         onClick={() => setIsOpen(true)}
         className="chatbot-trigger-wrapper"
-        aria-label="Open chat"
+        aria-label="Open Tasnim AI chat"
+        title="Ask Tasnim AI"
       >
         <CowAvatar size="md" showOnlineIndicator={true} animate={true} />
       </button>
