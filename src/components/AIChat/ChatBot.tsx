@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiMessageCircle, FiX, FiSend, FiMinus } from 'react-icons/fi';
-import { BsRobot } from 'react-icons/bs';
+import { FiX, FiMinus } from 'react-icons/fi';
+import CowAvatar from './CowAvatar';
 import ChatWindow from './ChatWindow';
 import ChatInput from './ChatInput';
 import './ChatBot.css';
@@ -74,11 +74,10 @@ const ChatBot: React.FC = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="chatbot-trigger"
+        className="chatbot-trigger-wrapper"
         aria-label="Open chat"
       >
-        <FiMessageCircle size={24} />
-        <span className="chatbot-pulse"></span>
+        <CowAvatar size="md" showOnlineIndicator={true} animate={true} />
       </button>
     );
   }
@@ -87,12 +86,12 @@ const ChatBot: React.FC = () => {
     <div className={`chatbot-container ${isMinimized ? 'minimized' : ''}`}>
       <div className="chatbot-header">
         <div className="chatbot-header-content">
-          <div className="chatbot-header-icon">
-            <BsRobot size={20} />
+          <div className="chatbot-header-avatar">
+            <CowAvatar size="sm" showOnlineIndicator={true} animate={false} />
           </div>
           <div className="chatbot-header-text">
-            <h3>তাসনিম সহায়ক</h3>
-            <p>অনলাইনে এবং সক্রিয়</p>
+            <h3>Tasnim AI</h3>
+            <p className="online-status">Always Online</p>
           </div>
         </div>
         <div className="chatbot-header-actions">

@@ -1,0 +1,255 @@
+/* =====================================================
+   COW AVATAR - PREMIUM DESIGN WITH GLASSMORPHISM
+   ===================================================== */
+
+:root {
+  --primary-green: #2E7D32;
+  --secondary-green: #4CAF50;
+  --accent-green: #81C784;
+  --glow-green: rgba(76, 175, 80, 0.4);
+  --white: #FFFFFF;
+  --shadow-lg: 0 10px 25px rgba(46, 125, 50, 0.15);
+}
+
+/* =====================================================
+   CONTAINER
+   ===================================================== */
+
+.cow-avatar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Size Variants */
+.cow-size-sm {
+  width: 56px;
+  height: 56px;
+}
+
+.cow-size-md {
+  width: 64px;
+  height: 64px;
+}
+
+.cow-size-lg {
+  width: 80px;
+  height: 80px;
+}
+
+/* =====================================================
+   AVATAR BUTTON - GLASSMORPHISM
+   ===================================================== */
+
+.cow-avatar-button {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    var(--shadow-lg),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 0 20px var(--glow-green);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.cow-avatar-button:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 15px 35px rgba(46, 125, 50, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 0 30px var(--glow-green);
+}
+
+.cow-avatar-button:active {
+  transform: scale(0.95);
+}
+
+/* =====================================================
+   COW SVG
+   ===================================================== */
+
+.cow-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  z-index: 2;
+}
+
+/* =====================================================
+   GLOW EFFECT
+   ===================================================== */
+
+.cow-glow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow-green), transparent);
+  opacity: 0;
+  animation: glow-pulse 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* =====================================================
+   SPARKLE EFFECTS
+   ===================================================== */
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, #D4AF37, transparent);
+  border-radius: 50%;
+  animation: sparkle-twinkle 2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.sparkle-1 {
+  top: 10%;
+  right: 15%;
+  animation-delay: 0s;
+}
+
+.sparkle-2 {
+  top: 20%;
+  left: 15%;
+  animation-delay: 0.7s;
+}
+
+.sparkle-3 {
+  bottom: 25%;
+  right: 10%;
+  animation-delay: 1.4s;
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* =====================================================
+   PULSE ANIMATION (5 seconds)
+   ===================================================== */
+
+.animate-pulse {
+  animation: avatar-pulse 5s ease-in-out infinite;
+}
+
+@keyframes avatar-pulse {
+  0%, 100% {
+    box-shadow: 
+      var(--shadow-lg),
+      inset 0 1px 2px rgba(255, 255, 255, 0.3),
+      0 0 20px var(--glow-green);
+  }
+  50% {
+    box-shadow: 
+      0 15px 35px rgba(46, 125, 50, 0.25),
+      inset 0 1px 2px rgba(255, 255, 255, 0.3),
+      0 0 40px var(--glow-green);
+  }
+}
+
+/* =====================================================
+   ONLINE INDICATOR
+   ===================================================== */
+
+.online-indicator {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #22C55E;
+  border: 3px solid var(--white);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  animation: online-pulse 2s ease-in-out infinite;
+  z-index: 4;
+}
+
+.online-dot {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #22C55E;
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes online-pulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.8);
+  }
+}
+
+@keyframes dot-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 512px) {
+  .cow-size-md {
+    width: 56px;
+    height: 56px;
+  }
+
+  .cow-size-lg {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+/* =====================================================
+   ANIMATIONS
+   ===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .cow-avatar-button,
+  .cow-glow,
+  .sparkle,
+  .animate-pulse,
+  .online-indicator {
+    animation: none !important;
+    transition: none !important;
+  }
+}
