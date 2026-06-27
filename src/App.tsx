@@ -15,6 +15,7 @@ import CareersPage from './pages/CareersPage';
 import ContactPage from './pages/ContactPage';
 import AdminPanel from './pages/AdminPanel';
 import BackToTop from './components/BackToTop';
+import { ChatBot } from './components/AIChat';
 
 const AppContent: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState(true);
@@ -53,6 +54,8 @@ const AppContent: React.FC = () => {
       {!isAdminPage && <Footer />}
 
       {!isAdminPage && <BackToTop />}
+
+      {!isAdminPage && <ChatBot />}
     </div>
   );
 };
