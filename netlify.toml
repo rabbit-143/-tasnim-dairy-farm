@@ -1,16 +1,67 @@
+# Netlify Configuration for Tasnim Dairy Farm Frontend
+
 [build]
-  command = "npm install && npm run build"
+  command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "10"
+
+# Environment variables for production builds
 [env.production]
-  [env.production.context]
-    environment = { VITE_API_URL = "https://tasnim-dairy-farm-api.up.railway.app" }
+  [env.production.context.production.environment]
+    VITE_API_BASE_URL = "https://tasnim-dairy-farm-api.onrender.com"
 
-[env.development]
-  [env.development.context]
-    environment = { VITE_API_URL = "http://localhost:3000" }
+# Environment variables for deploy preview builds
+[env.staging]
+  [env.staging.context.deploy-preview.environment]
+    VITE_API_BASE_URL = "https://tasnim-dairy-farm-api.onrender.com"
 
+# Redirect all requests to index.html (for React Router)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Headers for API requests
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Cache settings for static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cache settings for HTML
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Deployment settings
+[context.production]
+  command = "npm run build"
+  environment = { VITE_API_BASE_URL = "https://tasnim-dairy-farm-api.onrender.com" }
+
+[context.deploy-preview]
+  command = "npm run build"
+  environment = { VITE_API_BASE_URL = "https://tasnim-dairy-farm-api.onrender.com" }
+
+[context.branch-deploy]
+  command = "npm run build"
+  environment = { VITE_API_BASE_URL = "https://tasnim-dairy-farm-api.onrender.com" }

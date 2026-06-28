@@ -7,12 +7,13 @@ import AdminDashboard from '../admin/AdminDashboard';
 import AdminFounders from '../admin/AdminFounders';
 import AdminBlogs from '../admin/AdminBlogs';
 import AdminGallery from '../admin/AdminGallery';
+import AdminGrowthJourney from '../admin/AdminGrowthJourney';
 import AdminCareers from '../admin/AdminCareers';
 import AdminSettings from '../admin/AdminSettings';
 import AdminAbout from '../admin/AdminAbout';
 import AdminMessages from '../admin/AdminMessages';
 
-type AdminPage = 'dashboard' | 'founders' | 'blogs' | 'gallery' | 'careers' | 'settings' | 'about' | 'messages';
+type AdminPage = 'dashboard' | 'founders' | 'blogs' | 'gallery' | 'growth' | 'careers' | 'settings' | 'about' | 'messages';
 
 interface AdminPanelProps {
   setCurrentPage: (page: string) => void;
@@ -33,6 +34,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ setCurrentPage }) => {
     { id: 'about', icon: <FaInfoCircle size={18} />, label: 'About & Vision' },
     { id: 'founders', icon: <FaUsers size={18} />, label: 'Founders' },
     { id: 'gallery', icon: <FaImages size={18} />, label: 'Gallery' },
+    { id: 'growth', icon: <FaFileAlt size={18} />, label: 'Growth Journey' },
     { id: 'blogs', icon: <FaFileAlt size={18} />, label: 'Blog Posts' },
     { id: 'careers', icon: <FaBriefcase size={18} />, label: 'Careers' },
     { id: 'settings', icon: <FaCog size={18} />, label: 'Site Settings' },
@@ -45,6 +47,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ setCurrentPage }) => {
       case 'founders': return <AdminFounders />;
       case 'blogs': return <AdminBlogs />;
       case 'gallery': return <AdminGallery />;
+      case 'growth': return <AdminGrowthJourney />;
       case 'careers': return <AdminCareers />;
       case 'settings': return <AdminSettings />;
       case 'about': return <AdminAbout />;

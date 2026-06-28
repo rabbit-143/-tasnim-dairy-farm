@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
-  Founder, BlogPost, GalleryItem, CareerPost, SiteSettings, GrowthStat, ContactMessage,
-  defaultSettings, defaultGrowthStats
+  Founder, BlogPost, GalleryItem, CareerPost, SiteSettings, GrowthStat, ContactMessage, GrowthJourney,
+  defaultSettings, defaultGrowthStats, defaultGrowthJourney
 } from '../data/store';
 
 // Backend API base URL
@@ -102,6 +102,12 @@ interface AdminContextType {
   fetchMessages: () => Promise<void>;
   markMessageAsRead: (id: number) => Promise<void>;
   deleteMessage: (id: number) => Promise<void>;
+  growthJourney: GrowthJourney[];
+  setGrowthJourney: (g: GrowthJourney[]) => void;
+  addGrowthJourney: (g: Omit<GrowthJourney, 'id'>) => Promise<void>;
+  updateGrowthJourney: (id: number, g: Partial<GrowthJourney>) => Promise<void>;
+  deleteGrowthJourney: (id: number) => Promise<void>;
+  fetchGrowthJourney: () => Promise<void>;
   growthStats: GrowthStat[];
   updateGrowthStat: (index: number, stat: Partial<GrowthStat>) => void;
   loading: boolean;
@@ -122,6 +128,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [careers, setCareers] = useState<CareerPost[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [growthJourney, setGrowthJourney] = useState<GrowthJourney[]>(defaultGrowthJourney);
   const [growthStats, setGrowthStats] = useState<GrowthStat[]>(() => {
     const saved = localStorage.getItem('tasnim_growth');
     return saved ? JSON.parse(saved) : defaultGrowthStats;
@@ -150,13 +157,14 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       };
 
-      const [foundersRes, blogsRes, galleryRes, careersRes, settingsRes, messagesRes] = await Promise.all([
+      const [foundersRes, blogsRes, galleryRes, careersRes, settingsRes, messagesRes, growthRes] = await Promise.all([
         safeFetch(`${API_BASE_URL}/founders`),
         safeFetch(`${API_BASE_URL}/blogs`),
         safeFetch(`${API_BASE_URL}/gallery`),
         safeFetch(`${API_BASE_URL}/careers`),
         safeFetch(`${API_BASE_URL}/settings`),
         safeFetch(`${API_BASE_URL}/contact/messages`),
+        safeFetch(`${API_BASE_URL}/growth`),
       ]);
 
       // Use mock data if backend is down
@@ -181,6 +189,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (messagesRes) setMessages(await messagesRes.json());
       else setMessages([]);
+      
+      if (growthRes) setGrowthJourney(await growthRes.json());
+      else setGrowthJourney(defaultGrowthJourney);
       
       // Show warning if backend is down
       if (!foundersRes || !settingsRes) {
@@ -574,6 +585,81 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setGrowthStats(prev => prev.map((s, i) => i === index ? { ...s, ...stat } : s));
   };
 
+  const fetchGrowthJourney = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/growth`);
+      if (res.ok) {
+        const data = await res.json();
+        setGrowthJourney(data);
+      }
+    } catch (error) {
+      console.error('Error fetching growth journey:', error);
+    }
+  };
+
+  const addGrowthJourney = async (item: Omit<GrowthJourney, 'id'>) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/growth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item),
+      });
+
+      if (!response.ok) throw new Error('Failed to add growth journey item');
+
+      const newItem = await response.json();
+      setGrowthJourney(prev => [...prev, newItem]);
+    } catch (error) {
+      console.error('Error adding growth journey item:', error);
+      alert('Failed to add growth journey item');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateGrowthJourney = async (id: number, item: Partial<GrowthJourney>) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/growth/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item),
+      });
+
+      if (!response.ok) throw new Error('Failed to update growth journey item');
+
+      const updated = await response.json();
+      setGrowthJourney(prev => prev.map(x => x.id === id ? updated : x));
+    } catch (error) {
+      console.error('Error updating growth journey item:', error);
+      alert('Failed to update growth journey item');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteGrowthJourney = async (id: number) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/growth/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete growth journey item');
+
+      setGrowthJourney(prev => prev.filter(x => x.id !== id));
+    } catch (error) {
+      console.error('Error deleting growth journey item:', error);
+      alert('Failed to delete growth journey item');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const refetchFounders = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/founders`);
@@ -598,6 +684,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       gallery, addGalleryItem, deleteGalleryItem,
       careers, addCareer, updateCareer, deleteCareer,
       messages, setMessages, fetchMessages, markMessageAsRead, deleteMessage,
+      growthJourney, setGrowthJourney, addGrowthJourney, updateGrowthJourney, deleteGrowthJourney, fetchGrowthJourney,
       growthStats, updateGrowthStat,
       loading,
       refetchFounders,

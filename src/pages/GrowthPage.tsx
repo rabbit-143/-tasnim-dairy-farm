@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useAdmin } from '../context/AdminContext';
 import CountUp from 'react-countup';
 import { useInView } from 'react-intersection-observer';
 import { FaCalendarAlt, FaUsers, FaUser, FaStar, FaBullseye, FaChartLine, FaChartBar, FaListAlt, FaGlobe, FaSeedling, FaRocket, FaIndustry, FaDna, FaLaptop, FaGraduationCap, FaLeaf } from 'react-icons/fa';
@@ -20,6 +21,7 @@ const StatBlock: React.FC<{ end: number; suffix?: string; label: string; icon: R
 };
 
 const GrowthPage: React.FC = () => {
+  const { growthJourney } = useAdmin();
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,53 +33,6 @@ const GrowthPage: React.FC = () => {
     els?.forEach(el => observer.observe(el));
     return () => observer.disconnect();
   }, []);
-
-  const timelineData = [
-    {
-      year: '2026',
-      icon: <FaSeedling size={20} />,
-      title: 'The Beginning',
-      subtitle: 'Farm Founded – February 14, 2026',
-      desc: 'Four passionate founders established Tasnim Dairy Farm with a bold vision. Started with 30 liters daily production and 10 dedicated employees. The foundation of a great dairy empire was laid.',
-      stat: '30 L/Day',
-      statLabel: 'Daily Production',
-      color: '#0F5D2F',
-      side: 'left',
-    },
-    {
-      year: 'Present',
-      icon: <FaChartLine size={20} />,
-      title: 'Rapid Growth',
-      subtitle: 'Current Operations – 2026',
-      desc: 'Within months of founding, production tripled to 100 liters daily. The workforce grew to 125 employees. Modern dairy management systems implemented. Quality control protocols established.',
-      stat: '100 L/Day',
-      statLabel: 'Current Production',
-      color: '#D4AF37',
-      side: 'right',
-    },
-    {
-      year: '2028',
-      icon: <FaRocket size={20} />,
-      title: 'Target Milestone',
-      subtitle: 'Ambitious 2028 Goal',
-      desc: 'Target production of 1,000 liters daily and 30,000 liters monthly. Expansion of farm facilities, modernization of production systems, and significant workforce growth planned.',
-      stat: '1,000 L/Day',
-      statLabel: 'Target Production',
-      color: '#0F5D2F',
-      side: 'left',
-    },
-    {
-      year: 'Future',
-      icon: <FaGlobe size={20} />,
-      title: 'Global Expansion',
-      subtitle: 'Long-Term Vision',
-      desc: 'Establishment of a worldwide dairy supply network. International market penetration with certified pure milk. Recognition as one of Bangladesh\'s leading dairy brands globally.',
-      stat: 'Global',
-      statLabel: 'Market Reach',
-      color: '#D4AF37',
-      side: 'right',
-    },
-  ];
 
   return (
     <div ref={pageRef}>
@@ -147,43 +102,64 @@ const GrowthPage: React.FC = () => {
           <div className="timeline-container">
             <div className="timeline-line" />
 
-            {timelineData.map((item, i) => (
-              <div
-                key={i}
-                className={`timeline-item ${item.side === 'right' ? 'fade-right' : 'fade-left'}`}
-                style={{ transitionDelay: `${i * 0.15}s` }}
-              >
-                {/* Content */}
-                <div className="timeline-content">
-                  <div style={{
-                    display: 'inline-block', background: `${item.color}20`,
-                    color: item.color, padding: '0.35rem 1rem', borderRadius: '50px',
-                    fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.75rem',
-                  }}>
-                    {item.subtitle}
-                  </div>
-                  <div className="timeline-year" style={{ color: item.color }}>{item.year}</div>
-                  <div className="timeline-title">{item.title}</div>
-                  <div className="timeline-desc">{item.desc}</div>
-                  <div style={{
-                    marginTop: '1.25rem', background: '#F8F9FA', borderRadius: '12px',
-                    padding: '0.875rem 1.25rem', display: 'flex', gap: '1rem', alignItems: 'center',
-                    border: `1px solid ${item.color}20`,
-                  }}>
-                    <span style={{ fontSize: '1.5rem', color: item.color, fontWeight: 800 }}>{item.stat}</span>
-                    <span style={{ fontSize: '0.78rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.statLabel}</span>
-                  </div>
-                </div>
+            {(growthJourney.length > 0 ? growthJourney : []).sort((a, b) => a.sort_order - b.sort_order).map((item, i) => {
+              // Get icon based on milestone
+              let icon = <FaChartLine size={20} />;
+              if (item.title.includes('Beginning')) icon = <FaSeedling size={20} />;
+              else if (item.title.includes('Target')) icon = <FaRocket size={20} />;
+              else if (item.title.includes('Global')) icon = <FaGlobe size={20} />;
 
-                {/* Dot */}
-                <div className="timeline-dot">
-                  <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
-                </div>
+              return (
+                <div
+                  key={item.id}
+                  className={`timeline-item ${item.side === 'right' ? 'fade-right' : 'fade-left'}`}
+                  style={{ transitionDelay: `${i * 0.15}s` }}
+                >
+                  {/* Content */}
+                  <div className="timeline-content">
+                    <div style={{
+                      display: 'inline-block', background: `${item.color}20`,
+                      color: item.color, padding: '0.35rem 1rem', borderRadius: '50px',
+                      fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.75rem',
+                    }}>
+                      {item.year}
+                    </div>
+                    <div className="timeline-year" style={{ color: item.color }}>{item.year}</div>
+                    <div className="timeline-title">{item.title}</div>
+                    <div className="timeline-desc">{item.description}</div>
+                    
+                    {/* Image if exists */}
+                    {item.image && (
+                      <div style={{ marginTop: '1rem', marginBottom: '1rem', borderRadius: '10px', overflow: 'hidden' }}>
+                        <img 
+                          src={item.image.startsWith('/uploads') ? `http://localhost:3001${item.image}` : item.image} 
+                          alt={item.title}
+                          style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      </div>
+                    )}
+                    
+                    <div style={{
+                      marginTop: '1.25rem', background: '#F8F9FA', borderRadius: '12px',
+                      padding: '0.875rem 1.25rem', display: 'flex', gap: '1rem', alignItems: 'center',
+                      border: `1px solid ${item.color}20`,
+                    }}>
+                      <span style={{ fontSize: '1.5rem', color: item.color, fontWeight: 800 }}>{item.stat_value}</span>
+                      <span style={{ fontSize: '0.78rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.stat_label}</span>
+                    </div>
+                  </div>
 
-                {/* Spacer */}
-                <div style={{ width: '45%' }} />
-              </div>
-            ))}
+                  {/* Dot */}
+                  <div className="timeline-dot">
+                    <span style={{ fontSize: '1.2rem' }}>{icon}</span>
+                  </div>
+
+                  {/* Spacer */}
+                  <div style={{ width: '45%' }} />
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

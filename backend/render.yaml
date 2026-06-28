@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: tasnim-dairy-farm-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tasnim-dairy-farm-db
+          property: connectionString
+      - key: CORS_ORIGIN
+        value: https://tasnim-dairy-farm.netlify.app
+      - key: LOG_LEVEL
+        value: info
+
+databases:
+  - name: tasnim-dairy-farm-db
+    databaseName: tasnim_dairy_farm
+    user: postgres
+    plan: starter
+    postgresMajorVersion: 15
+
+staticSites:
+  - name: tasnim-dairy-farm-frontend
+    buildCommand: npm run build
+    startCommand: npm run preview
+    rootDir: .
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://tasnim-dairy-farm-api.onrender.com

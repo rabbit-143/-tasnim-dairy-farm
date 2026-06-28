@@ -111,6 +111,19 @@ async function initPostgreSQL() {
         message TEXT NOT NULL,
         is_read INTEGER DEFAULT 0,
         created_at TEXT NOT NULL
+      )`,
+      `CREATE TABLE IF NOT EXISTS growth_journey (
+        id SERIAL PRIMARY KEY,
+        milestone TEXT NOT NULL,
+        year TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        image TEXT,
+        stat_value TEXT,
+        stat_label TEXT,
+        color TEXT,
+        side TEXT,
+        sort_order INTEGER DEFAULT 0
       )`
     ];
 
@@ -129,7 +142,7 @@ async function initPostgreSQL() {
         ['Mobasshera Sultana', 'Founder & CEO', JSON.stringify(['Strategic Leadership', 'Farm Management', 'Growth Planning']), '/images/founder-ceo.png'],
         ['Johirul Islam', 'Founder & CO', JSON.stringify(['Operations', 'Expansion Planning', 'Resource Management']), '/images/founder-co.png'],
         ['Rakibul Hasan Rahat', 'Founder & Marketing Lead', JSON.stringify(['Branding', 'Marketing', 'Public Relations']), '/images/founder-marketing-lead.png'],
-        ['Anjhum Akter', 'Founder & Accountant', JSON.stringify(['Financial Management', 'Accounting', 'Budget Planning']), '/images/founder-accountant.png'],
+        ['Anjum Binte Abbas Ruba', 'Founder & Accountant', JSON.stringify(['Financial Management', 'Accounting', 'Budget Planning']), '/images/founder-accountant.png'],
         ['Etheka Ariyana', 'Brand Ambassador', JSON.stringify(['Brand Representation', 'Public Relations', 'Community Engagement']), '/images/brand-ambassador.png']
       ];
 
@@ -252,6 +265,19 @@ async function initSQLite() {
       is_read INTEGER DEFAULT 0,
       created_at TEXT NOT NULL
     )`);
+    db.run(`CREATE TABLE IF NOT EXISTS growth_journey (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      milestone TEXT NOT NULL,
+      year TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      image TEXT,
+      stat_value TEXT,
+      stat_label TEXT,
+      color TEXT,
+      side TEXT,
+      sort_order INTEGER DEFAULT 0
+    )`);
 
     saveSQLite();
     console.log('✓ Tables created successfully');
@@ -319,79 +345,10 @@ function saveSQLite() {
   }
 }
 
-// ============================================
-// COMPATIBILITY HELPER FUNCTIONS
-// ============================================
-
-// Get the database instance
-function getDb() {
-  if (usePg) {
-    return pool;
-  } else {
-    return db;
-  }
-}
-
-// Get record(s) by ID for a specific table
-function getById(table, id) {
-  if (usePg) {
-    // PostgreSQL mode - would need async, but routes expect sync
-    // For now, return pool for compatibility
-    return pool ? pool.query(`SELECT * FROM ${table} WHERE id = $1`, [id]) : null;
-  } else {
-    // SQLite mode - synchronous
-    const result = db.exec(`SELECT * FROM ${table} WHERE id = ?`, [id]);
-    if (result.length === 0 || result[0].values.length === 0) {
-      return { values: [[]] };
-    }
-    return result;
-  }
-}
-
-// Check if record exists by ID
-function existsById(table, id) {
-  if (usePg) {
-    // PostgreSQL - this is async but routes use it synchronously
-    // For sync compatibility, we'll do a basic check
-    return pool !== null; // Simplified for sync usage
-  } else {
-    // SQLite - synchronous
-    const result = db.exec(`SELECT 1 FROM ${table} WHERE id = ? LIMIT 1`, [id]);
-    return result.length > 0 && result[0].values.length > 0;
-  }
-}
-
-// Delete record by ID
-function deleteById(table, id) {
-  if (usePg) {
-    // PostgreSQL - async operation
-    if (pool) {
-      return pool.query(`DELETE FROM ${table} WHERE id = $1`, [id]);
-    }
-  } else {
-    // SQLite - synchronous
-    db.run(`DELETE FROM ${table} WHERE id = ?`, [id]);
-    saveSQLite();
-  }
-}
-
-// Save function (for SQLite)
-function save() {
-  if (!usePg && db) {
-    saveSQLite();
-  }
-}
-
 module.exports = {
   pool: usePg ? pool : null,
   db: !usePg ? db : null,
   usePg,
   initializeDatabase,
-  saveSQLite,
-  // Exported helper functions for compatibility with routes
-  getDb,
-  getById,
-  existsById,
-  deleteById,
-  save
+  saveSQLite
 };

@@ -40,6 +40,7 @@ const AdminDashboard: React.FC<Props> = ({ setAdminPage }) => {
   const stats = [
     { icon: <FaFileAlt size={36} />, label: 'Blog Posts', value: blogsArray.length, page: 'blogs', color: '#0F5D2F' },
     { icon: <FaCamera size={36} />, label: 'Gallery Images', value: galleryArray.length, page: 'gallery', color: '#D4AF37' },
+    { icon: <FaFileAlt size={36} />, label: 'Growth Milestones', value: 4, page: 'growth', color: '#0F5D2F' },
     { icon: <FaBriefcase size={36} />, label: 'Job Postings', value: careersArray.filter(c => c.active).length, page: 'careers', color: '#0F5D2F' },
     { icon: <FaStar size={36} />, label: 'Founders', value: foundersArray.length, page: 'founders', color: '#D4AF37' },
     { icon: <FaEnvelope size={36} />, label: 'New Messages', value: unreadMessages, page: 'messages', color: unreadMessages > 0 ? '#ef4646' : '#0F5D2F' },

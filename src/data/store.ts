@@ -56,6 +56,20 @@ export interface ContactMessage {
   created_at: string;
 }
 
+export interface GrowthJourney {
+  id: number;
+  milestone: string;
+  year: string;
+  title: string;
+  description: string;
+  image: string | null;
+  stat_value: string;
+  stat_label: string;
+  color: string;
+  side: 'left' | 'right';
+  sort_order: number;
+}
+
 export interface SiteSettings {
   siteName: string;
   tagline: string;
@@ -226,4 +240,59 @@ export const defaultGrowthStats = [
   { label: 'Initial Employees', value: '10', icon: FaUsers },
   { label: 'Current Employees', value: '125', icon: FaUsers },
   { label: 'Founders', value: '4', icon: FaStar },
+];
+
+export const defaultGrowthJourney: GrowthJourney[] = [
+  {
+    id: 1,
+    milestone: '2026',
+    year: '2026',
+    title: 'The Beginning',
+    description: 'Four passionate founders established Tasnim Dairy Farm with a bold vision. Started with 30 liters daily production and 10 dedicated employees. The foundation of a great dairy empire was laid.',
+    image: null,
+    stat_value: '30 L/Day',
+    stat_label: 'Daily Production',
+    color: '#0F5D2F',
+    side: 'left',
+    sort_order: 1,
+  },
+  {
+    id: 2,
+    milestone: 'Present',
+    year: 'Present',
+    title: 'Rapid Growth',
+    description: 'Within months of founding, production tripled to 100 liters daily. The workforce grew to 125 employees. Modern dairy management systems implemented. Quality control protocols established.',
+    image: null,
+    stat_value: '100 L/Day',
+    stat_label: 'Current Production',
+    color: '#D4AF37',
+    side: 'right',
+    sort_order: 2,
+  },
+  {
+    id: 3,
+    milestone: '2028',
+    year: '2028',
+    title: 'Target Milestone',
+    description: 'Target production of 1,000 liters daily and 30,000 liters monthly. Expansion of farm facilities, modernization of production systems, and significant workforce growth planned.',
+    image: null,
+    stat_value: '1,000 L/Day',
+    stat_label: 'Target Production',
+    color: '#0F5D2F',
+    side: 'left',
+    sort_order: 3,
+  },
+  {
+    id: 4,
+    milestone: 'Future',
+    year: 'Future',
+    title: 'Global Expansion',
+    description: 'Establishment of a worldwide dairy supply network. International market penetration with certified pure milk. Recognition as one of Bangladesh\'s leading dairy brands globally.',
+    image: null,
+    stat_value: 'Global',
+    stat_label: 'Market Reach',
+    color: '#D4AF37',
+    side: 'right',
+    sort_order: 4,
+  },
 ];

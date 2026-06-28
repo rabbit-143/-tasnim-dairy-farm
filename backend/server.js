@@ -80,6 +80,7 @@ const galleryRouter = require('./routes/gallery');
 const careersRouter = require('./routes/careers');
 const settingsRouter = require('./routes/settings');
 const contactRouter = require('./routes/contact');
+const growthRouter = require('./routes/growth');
 
 app.use('/api/founders', foundersRouter);
 app.use('/api/blogs', blogsRouter);
@@ -87,6 +88,7 @@ app.use('/api/gallery', galleryRouter);
 app.use('/api/careers', careersRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/contact', contactRouter);
+app.use('/api/growth', growthRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
