@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTrash, FaEnvelope, FaPhone, FaClock, FaEye } from 'react-icons/fa';
+import { API_BASE_URL } from '../context/AdminContext';
 
 interface Message {
   id: number;
@@ -28,7 +29,7 @@ const AdminMessages: React.FC = () => {
     try {
       setLoading(true);
       // Use correct backend URL (port 3000)
-      const response = await fetch('http://localhost:3000/api/contact/messages');
+      const response = await fetch(`${API_BASE_URL}/contact/messages`);
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
@@ -47,7 +48,7 @@ const AdminMessages: React.FC = () => {
 
   const markAsRead = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/contact/messages/${id}/read`, {
+      const response = await fetch(`${API_BASE_URL}/contact/messages/${id}/read`, {
         method: 'PUT',
       });
       if (response.ok) {
@@ -65,7 +66,7 @@ const AdminMessages: React.FC = () => {
     if (!confirm('Are you sure you want to delete this message?')) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/api/contact/messages/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/contact/messages/${id}`, {
         method: 'DELETE',
       });
       if (response.ok) {

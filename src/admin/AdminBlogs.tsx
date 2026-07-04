@@ -3,7 +3,7 @@ import { useAdmin, API_BASE_URL } from '../context/AdminContext';
 import type { BlogPost } from '../data/store';
 import { FaPlus, FaNewspaper, FaEdit, FaTrash, FaTimes, FaSave, FaCalendarAlt } from 'react-icons/fa';
 
-const getImageUrl = (path: string | null) => path?.startsWith('/uploads/') ? `${API_BASE_URL}${path}` : path;
+const getImageUrl = (path: string | null) => path?.startsWith('/uploads/') ? path : path;
 
 const AdminBlogs: React.FC = () => {
   const { blogs, addBlog, updateBlog, deleteBlog } = useAdmin();

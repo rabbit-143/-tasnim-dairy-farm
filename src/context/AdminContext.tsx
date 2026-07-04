@@ -6,14 +6,42 @@ import {
 
 // Backend API base URL
 const getApiUrl = () => {
-  try {
-    return (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
-  } catch {
-    return 'http://localhost:3000/api';
+  // In development with Vite proxy, use relative path
+  if (import.meta.env.DEV) {
+    return '/api';
   }
+  // In production, use the full API URL from environment variable
+  return import.meta.env.VITE_API_URL || 'https://tasnim-dairy-farm-backend.onrender.com/api';
 };
 
 export const API_BASE_URL = getApiUrl();
+
+// Helper function for safe JSON parsing
+const safeJsonParse = async (response: Response) => {
+  try {
+    return await response.json();
+  } catch (parseError) {
+    console.error('Failed to parse response as JSON:', parseError);
+    throw new Error('Server returned invalid response format');
+  }
+};
+
+// Helper function for safe error handling
+const handleResponseError = async (response: Response, defaultMessage: string) => {
+  let errorMessage = defaultMessage;
+  try {
+    const errorResponse = await response.text();
+    try {
+      const errorJson = JSON.parse(errorResponse);
+      errorMessage = errorJson.error || errorMessage;
+    } catch {
+      errorMessage = errorResponse || response.statusText || errorMessage;
+    }
+  } catch {
+    errorMessage = response.statusText || errorMessage;
+  }
+  throw new Error(errorMessage);
+};
 
 // Fallback mock data for when backend is offline
 const MOCK_DATA = {
@@ -260,11 +288,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to add founder');
+        await handleResponseError(response, 'Failed to add founder');
       }
 
-      const newFounder = await response.json();
+      const newFounder = await safeJsonParse(response);
       setFounders(prev => [...prev, newFounder]);
     } catch (error) {
       console.error('Error adding founder:', error);
@@ -292,11 +319,30 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to update founder');
+        let errorMessage = 'Failed to update founder';
+        try {
+          const errorResponse = await response.text();
+          // Try to parse as JSON first
+          try {
+            const errorJson = JSON.parse(errorResponse);
+            errorMessage = errorJson.error || errorMessage;
+          } catch {
+            // If not JSON, use the text response or status text
+            errorMessage = errorResponse || response.statusText || errorMessage;
+          }
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
-      const updated = await response.json();
+      let updated;
+      try {
+        updated = await safeJsonParse(response);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        throw new Error('Server returned invalid response format');
+      }
       setFounders(prev => prev.map(x => x.id === id ? updated : x));
     } catch (error) {
       console.error('Error updating founder:', error);
@@ -315,8 +361,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to delete founder');
+        await handleResponseError(response, 'Failed to delete founder');
       }
 
       setFounders(prev => prev.filter(x => x.id !== id));
@@ -342,9 +387,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         body: JSON.stringify(b),
       });
 
-      if (!response.ok) throw new Error('Failed to add blog');
+      if (!response.ok) {
+        await handleResponseError(response, 'Failed to add blog');
+      }
 
-      const newBlog = await response.json();
+      const newBlog = await safeJsonParse(response);
       setBlogs(prev => [...prev, newBlog]);
     } catch (error) {
       console.error('Error adding blog:', error);
@@ -369,9 +416,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         body: JSON.stringify(updatedData),
       });
 
-      if (!response.ok) throw new Error('Failed to update blog');
+      if (!response.ok) {
+        await handleResponseError(response, 'Failed to update blog');
+      }
 
-      const updated = await response.json();
+      const updated = await safeJsonParse(response);
       setBlogs(prev => prev.map(x => x.id === id ? updated : x));
     } catch (error) {
       console.error('Error updating blog:', error);
@@ -606,7 +655,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         body: JSON.stringify(item),
       });
 
-      if (!response.ok) throw new Error('Failed to add growth journey item');
+      if (!response.ok) {
+        await handleResponseError(response, 'Failed to add growth journey item');
+      }
 
       const newItem = await response.json();
       setGrowthJourney(prev => [...prev, newItem]);
@@ -628,7 +679,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         body: JSON.stringify(item),
       });
 
-      if (!response.ok) throw new Error('Failed to update growth journey item');
+      if (!response.ok) {
+        await handleResponseError(response, 'Failed to update growth journey item');
+      }
 
       const updated = await response.json();
       setGrowthJourney(prev => prev.map(x => x.id === id ? updated : x));

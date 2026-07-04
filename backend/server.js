@@ -1,3 +1,10 @@
+process.on('uncaughtException', (err) => {
+  console.error('There was an uncaught error', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -7,12 +14,16 @@ const { pool, initializeDatabase } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+console.log('DEBUG: PORT =', PORT);
 
 // Middleware
-const allowedOrigins = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173').split(',').map(s => s.trim());
 app.use(cors({
-  origin: allowedOrigins.split(',').map(s => s.trim()),
-  credentials: true
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -54,12 +65,27 @@ const upload = multer({
 });
 
 // Image upload endpoint
-app.post('/api/upload/image', upload.single('image'), (req, res) => {
+app.post('/api/upload/image', (req, res, next) => {
+  console.log('DEBUG: Received upload request. Content-Type:', req.headers['content-type']);
+  upload.single('image')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      console.error('DEBUG: Multer error:', err);
+      return res.status(400).json({ error: err.message });
+    } else if (err) {
+      console.error('DEBUG: General upload error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    next();
+  });
+}, (req, res) => {
+  console.log('DEBUG: req.file =', req.file);
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      console.log('DEBUG: No file found in request');
+      return res.status(400).json({ error: 'No file uploaded. Ensure field name is "image"' });
     }
-
+    
+    console.log('DEBUG: File successfully processed:', req.file.filename);
     const filepath = `/uploads/${req.file.filename}`;
     
     res.json({
@@ -68,8 +94,8 @@ app.post('/api/upload/image', upload.single('image'), (req, res) => {
       filename: req.file.filename
     });
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: 'Failed to upload image' });
+    console.error('Upload processing error:', error);
+    res.status(500).json({ error: 'Failed to process image' });
   }
 });
 
@@ -105,6 +131,7 @@ app.use((err, req, res, next) => {
   console.error('Server error:', err);
   
   if (err instanceof multer.MulterError) {
+    console.error('Multer error:', err.code, err.message);
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: 'File size exceeds 5MB limit' });
     }
@@ -120,6 +147,7 @@ async function startServer() {
     await initializeDatabase();
     
     app.listen(PORT, () => {
+      console.log(`Server is definitely listening on port ${PORT}`);
       console.log(`
 ╔═══════════════════════════════════════════════════╗
 ║   Tasnim Dairy Farm Backend API (PostgreSQL)      ║

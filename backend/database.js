@@ -200,6 +200,9 @@ async function initSQLite() {
       console.log('✓ Created new SQLite database');
     }
     
+    // Make db globally available
+    global.sqliteDB = db;
+    
     // Create tables
     db.run(`CREATE TABLE IF NOT EXISTS founders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -345,10 +348,20 @@ function saveSQLite() {
   }
 }
 
+// Get database instance - ensures it's available
+function getDatabase() {
+  if (usePg) {
+    return pool;
+  } else {
+    return db || global.sqliteDB;
+  }
+}
+
 module.exports = {
   pool: usePg ? pool : null,
   db: !usePg ? db : null,
   usePg,
   initializeDatabase,
-  saveSQLite
+  saveSQLite,
+  getDatabase
 };

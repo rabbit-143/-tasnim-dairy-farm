@@ -137,7 +137,7 @@ const AdminFounders: React.FC = () => {
               {founder.image ? (
                 <img 
                   src={founder.image.startsWith('/uploads') 
-                    ? `http://localhost:3001${founder.image}` 
+                    ? founder.image
                     : founder.image
                   } 
                   alt={founder.name} 
@@ -231,7 +231,7 @@ const AdminFounders: React.FC = () => {
                   <div style={{ marginTop: '0.75rem', position: 'relative', display: 'inline-block' }}>
                     <img 
                       src={form.image.startsWith('/uploads') 
-                        ? `http://localhost:3001${form.image}` 
+                        ? form.image
                         : form.image
                       } 
                       alt="Preview" 

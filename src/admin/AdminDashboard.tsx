@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAdmin } from '../context/AdminContext';
+import { useAdmin, API_BASE_URL } from '../context/AdminContext';
 import { FaFileAlt, FaCamera, FaBriefcase, FaStar, FaUserFriends, FaCalendarAlt, FaChartLine, FaUsers, FaEnvelope } from 'react-icons/fa';
 import { GiCow, GiMilkCarton } from 'react-icons/gi';
 
@@ -16,7 +16,7 @@ const AdminDashboard: React.FC<Props> = ({ setAdminPage }) => {
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/contact/messages');
+        const response = await fetch(`${API_BASE_URL}/contact/messages`);
         if (response.ok) {
           const data = await response.json();
           const unread = data.filter((m: any) => !m.is_read).length;

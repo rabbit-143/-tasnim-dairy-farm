@@ -3,8 +3,8 @@ import { useAdmin } from '../context/AdminContext';
 import type { BlogPost } from '../data/store';
 import { FaFileAlt, FaNewspaper, FaCalendarAlt, FaTimes, FaStar } from 'react-icons/fa';
 
-const API_BASE_URL = 'http://localhost:3001';
-const getImageUrl = (path: string | null | undefined): string | undefined => path?.startsWith('/uploads/') ? `${API_BASE_URL}${path}` : (path || undefined);
+import { API_BASE_URL } from '../context/AdminContext';
+const getImageUrl = (path: string | null | undefined): string | undefined => path?.startsWith('/uploads/') ? path : (path || undefined);
 
 const BlogPage: React.FC = () => {
   const { blogs } = useAdmin();

@@ -82,7 +82,15 @@ const AdminGallery: React.FC = () => {
         {filtered.map(item => (
           <div key={item.id} style={{ background: '#ffffff', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
             <div style={{ height: '140px', overflow: 'hidden', position: 'relative' }}>
-              <img src={item.image.startsWith('/uploads') ? `http://localhost:3001${item.image}` : item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).src = '/images/farm-overview.jpg'; }} />
+              <img 
+                src={item.image.startsWith('/uploads') 
+                  ? item.image 
+                  : item.image
+                } 
+                alt={item.title} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                onError={e => { (e.target as HTMLImageElement).src = '/images/farm-overview.jpg'; }} 
+              />
               <div style={{
                 position: 'absolute', top: '0.5rem', right: '0.5rem',
                 background: '#0F5D2F', color: 'white', fontSize: '0.65rem',
@@ -148,7 +156,7 @@ const AdminGallery: React.FC = () => {
                     style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                   />
                   {form.image && (
-                    <img src={form.image.startsWith('/uploads') ? `http://localhost:3001${form.image}` : form.image} alt="Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '10px', marginTop: '0.75rem' }} />
+                    <img src={form.image.startsWith('/uploads') ? form.image : form.image} alt="Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '10px', marginTop: '0.75rem' }} />
                   )}
                 </div>
               </div>

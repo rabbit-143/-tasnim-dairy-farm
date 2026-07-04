@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { FaImages, FaTimes, FaSearch } from 'react-icons/fa';
 
-const API_BASE_URL = 'http://localhost:3001';
-const getImageUrl = (path: string): string => path.startsWith('/uploads/') ? `${API_BASE_URL}${path}` : path;
+import { API_BASE_URL } from '../context/AdminContext';
+const getImageUrl = (path: string): string => path.startsWith('/uploads/') ? path : path;
 
 const categories = ['All', 'Farm Images', 'Cattle Images', 'Production Images', 'Events'];
 

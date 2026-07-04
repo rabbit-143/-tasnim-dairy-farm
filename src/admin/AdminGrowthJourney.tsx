@@ -115,7 +115,7 @@ const AdminGrowthJourney: React.FC = () => {
             {item.image && (
               <div style={{ height: '140px', overflow: 'hidden', position: 'relative' }}>
                 <img 
-                  src={item.image.startsWith('/uploads') ? `http://localhost:3001${item.image}` : item.image} 
+                  src={item.image.startsWith('/uploads') ? item.image : item.image} 
                   alt={item.title} 
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                   onError={e => { (e.target as HTMLImageElement).src = '/images/farm-overview.jpg'; }} 
@@ -226,7 +226,7 @@ const AdminGrowthJourney: React.FC = () => {
                     style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                   />
                   {form.image && (
-                    <img src={form.image.startsWith('/uploads') ? `http://localhost:3001${form.image}` : form.image} alt="Preview" style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '10px', marginTop: '0.75rem' }} />
+                    <img src={form.image.startsWith('/uploads') ? `http://localhost:3000${form.image}` : form.image} alt="Preview" style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '10px', marginTop: '0.75rem' }} />
                   )}
                 </div>
               </div>

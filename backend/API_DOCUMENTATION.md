@@ -53,7 +53,7 @@ Get specific founder.
   "name": "Mobasshera Sultana",
   "role": "CEO & Founder",
   "responsibilities": ["Strategic Leadership"],
-  "image": null,
+  "image": "/uploads/Founder & CEO.png",
   "created_at": "2026-02-14T10:00:00Z",
   "updated_at": "2026-02-14T10:00:00Z"
 }

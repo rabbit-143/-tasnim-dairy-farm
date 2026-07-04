@@ -132,7 +132,7 @@ const GrowthPage: React.FC = () => {
                     {item.image && (
                       <div style={{ marginTop: '1rem', marginBottom: '1rem', borderRadius: '10px', overflow: 'hidden' }}>
                         <img 
-                          src={item.image.startsWith('/uploads') ? `http://localhost:3001${item.image}` : item.image} 
+                          src={item.image.startsWith('/uploads') ? `http://localhost:3000${item.image}` : item.image} 
                           alt={item.title}
                           style={{ width: '100%', height: '200px', objectFit: 'cover' }}
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
