@@ -58,6 +58,9 @@ const ChatBot: React.FC = () => {
   const callChatbotAPI = async (userMessage: string): Promise<string> => {
     try {
       const apiUrl = getApiUrl();
+      console.log('🔗 API URL:', apiUrl);
+      console.log('📤 Sending message to API:', userMessage);
+      
       const response = await fetch(`${apiUrl}/chatbot`, {
         method: 'POST',
         headers: {
@@ -66,22 +69,29 @@ const ChatBot: React.FC = () => {
         body: JSON.stringify({ message: userMessage }),
       });
 
+      console.log('📶 API Response Status:', response.status);
+
       if (!response.ok) {
         const error = await response.json();
-        console.error('Chatbot API Error:', error);
+        console.error('❌ Chatbot API Error:', error);
         return 'আপনার প্রশ্নের উত্তর দিতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
       }
 
       const data = await response.json();
+      console.log('✅ API Response Data:', data);
       return data.message || 'কোন প্রতিক্রিয়া পাওয়া যায়নি।';
     } catch (error) {
-      console.error('Error calling Chatbot API:', error);
+      console.error('🚨 Error calling Chatbot API:', error);
       return 'সার্ভারে সংযোগ বিচ্ছিন্ন হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
     }
   };
 
   const handleSendMessage = async (text: string) => {
-    if (!text.trim()) return;
+    console.log('📨 handleSendMessage called with:', text);
+    if (!text.trim()) {
+      console.log('⚠️ Empty message, returning');
+      return;
+    }
 
     // Add user message
     const userMessage: Message = {
@@ -91,11 +101,14 @@ const ChatBot: React.FC = () => {
       timestamp: new Date(),
     };
 
+    console.log('👤 Adding user message:', userMessage);
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
     // Get AI response from Backend Chatbot API
+    console.log('🤖 Calling chatbot API...');
     const aiResponse = await callChatbotAPI(text);
+    console.log('✅ Got response:', aiResponse);
     
     const botMessage: Message = {
       id: (Date.now() + 1).toString(),

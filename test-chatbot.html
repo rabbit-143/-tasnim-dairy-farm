@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot API Test</title>
+  <style>
+    body {
+      font-family: Poppins, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f8f9fa;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #0F5D2F;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: Poppins, sans-serif;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    button {
+      background: linear-gradient(135deg, #0F5D2F, #1a7a3f);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .output {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #0F5D2F;
+    }
+    .log {
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #374151;
+      line-height: 1.5;
+    }
+    .success {
+      color: #10b981;
+    }
+    .error {
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 Chatbot API Test</h1>
+    
+    <div class="form-group">
+      <label for="message">Message:</label>
+      <textarea id="message" placeholder="Type a message...">Hello, how are you?</textarea>
+    </div>
+
+    <button onclick="testChatbot()">Send Message</button>
+
+    <div class="output">
+      <h3>API Response:</h3>
+      <div class="log" id="output">[No response yet]</div>
+    </div>
+  </div>
+
+  <script>
+    async function testChatbot() {
+      const message = document.getElementById('message').value;
+      const output = document.getElementById('output');
+      
+      if (!message.trim()) {
+        output.innerHTML = '<span class="error">Error: Message cannot be empty</span>';
+        return;
+      }
+
+      output.innerHTML = '<span>🔄 Sending request...</span>';
+
+      try {
+        console.log('📨 Test Start: Sending message:', message);
+        
+        // Test 1: Using relative path (like dev should use)
+        console.log('Test 1: Using /api/chatbot (relative path - for dev)');
+        let response = await fetch('/api/chatbot', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: message }),
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers));
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error:', errorText);
+          throw new Error(`API returned ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Response data:', data);
+
+        output.innerHTML = `<span class="success">✅ Success!</span>
+<span class="log">
+Request: ${message}
+Response: ${data.message || 'No message in response'}
+
+Full Response:
+${JSON.stringify(data, null, 2)}
+</span>`;
+      } catch (error) {
+        console.error('❌ Error:', error);
+        output.innerHTML = `<span class="error">❌ Error: ${error.message}</span>
+<span class="log">
+Check browser console (F12) for full error details.
+
+Common issues:
+1. Backend not running on port 3000
+2. Vite proxy not configured properly
+3. CORS issue
+4. Message empty
+
+Try:
+- npm run dev (frontend)
+- npm run dev --prefix backend (backend)
+- Then refresh this page
+</span>`;
+      }
+    }
+
+    // Test on load
+    window.addEventListener('load', () => {
+      document.getElementById('output').innerHTML += '\n\n✅ Page loaded. Backend expected at: http://localhost:3000/api/chatbot';
+    });
+  </script>
+</body>
+</html>
