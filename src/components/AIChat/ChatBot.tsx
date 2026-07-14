@@ -19,6 +19,17 @@ interface Message {
  * - Cow mascot as assistant icon
  * - Premium glassmorphism design
  */
+
+// Helper function to get API base URL
+const getApiUrl = () => {
+  // In development with Vite proxy, use relative path
+  if (import.meta.env.DEV) {
+    return '/api';
+  }
+  // In production, use the full API URL from environment variable
+  return import.meta.env.VITE_API_URL || 'https://tasnim-dairy-farm-backend.onrender.com/api';
+};
+
 const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -31,7 +42,7 @@ const ChatBot: React.FC = () => {
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -42,53 +53,29 @@ const ChatBot: React.FC = () => {
   }, [messages]);
 
   /**
-   * Call Gemini API for AI response
+   * Call Backend Chatbot API for AI response
    */
-  const callGeminiAPI = async (userMessage: string): Promise<string> => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      return 'আফসোস, API কী সেট করা নেই। কনফিগারেশন চেক করুন।';
-    }
-
+  const callChatbotAPI = async (userMessage: string): Promise<string> => {
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: `You are Tasnim AI, a helpful assistant for Tasnim Dairy Farm. Answer in Bengali if the user writes in Bengali, English if in English. Be friendly, helpful, and professional. Context: You help with information about dairy farming, our products, and company information.\n\nUser message: ${userMessage}`,
-                  },
-                ],
-              },
-            ],
-            generationConfig: {
-              maxOutputTokens: 500,
-              temperature: 0.7,
-            },
-          }),
-        }
-      );
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/chatbot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('Gemini API Error:', error);
+        console.error('Chatbot API Error:', error);
         return 'আপনার প্রশ্নের উত্তর দিতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
       }
 
       const data = await response.json();
-      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      return aiResponse || 'কোন প্রতিক্রিয়া পাওয়া যায়নি।';
+      return data.message || 'কোন প্রতিক্রিয়া পাওয়া যায়নি।';
     } catch (error) {
-      console.error('Error calling Gemini API:', error);
+      console.error('Error calling Chatbot API:', error);
       return 'সার্ভারে সংযোগ বিচ্ছিন্ন হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
     }
   };
@@ -107,8 +94,8 @@ const ChatBot: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
-    // Get AI response from Gemini
-    const aiResponse = await callGeminiAPI(text);
+    // Get AI response from Backend Chatbot API
+    const aiResponse = await callChatbotAPI(text);
     
     const botMessage: Message = {
       id: (Date.now() + 1).toString(),

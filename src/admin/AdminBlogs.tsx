@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAdmin, API_BASE_URL } from '../context/AdminContext';
+import { useAdmin } from '../context/AdminContext';
 import type { BlogPost } from '../data/store';
 import { FaPlus, FaNewspaper, FaEdit, FaTrash, FaTimes, FaSave, FaCalendarAlt } from 'react-icons/fa';
 
