@@ -13,8 +13,8 @@ interface Message {
 }
 
 /**
- * Enhanced ChatBot with Gemini AI Integration
- * - Uses Google Gemini API for real AI responses
+ * Enhanced ChatBot with Longcat AI Integration
+ * - Uses Longcat AI API for real AI responses
  * - Secure API key from environment variables
  * - Cow mascot as assistant icon
  * - Premium glassmorphism design

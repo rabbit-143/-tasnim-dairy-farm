@@ -5,3 +5,7 @@ backend/uploads/
 .env
 .env.local
 dist/
+
+LONGCAT_API_KEY= ak_2Gv2fi3wP0W145D57s2ZB4837Wx0V
+LONGCAT_BASE_URL=https://api.longcat.chat/v1
+LONGCAT_MODEL=<your-model-name>

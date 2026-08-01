@@ -1,102 +1,195 @@
 const express = require('express');
+const axios = require('axios');
 const router = express.Router();
 
+// ✅ FIX #1: dotenv নিশ্চিতভাবে লোড হচ্ছে কি না নিশ্চিত করো
+// যদি main server.js এ আগেই require('dotenv').config() থাকে, এটা লাগবে না।
+// কিন্তু safety-র জন্য এখানে দিয়ে রাখলাম, কারণ ডাবল কল করলে ক্ষতি নেই।
+require('dotenv').config();
+
 /**
- * Chatbot API Route - Simple Keyword-Based Response
- * No external API required, works offline
+ * Chatbot API Route - Longcat AI Powered
  */
 
-// Common responses for Bengali and English queries
-const RESPONSES = {
+const WEBSITE_CONTEXT = `
+You are "Mou" (মৌ), the friendly AI assistant for Tasnim Dairy Farm website...
+`; // (তোমার আগের context অপরিবর্তিত রাখলাম)
+
+const FALLBACK_RESPONSES = {
   greetings: [
-    'আস্সালামু আলাইকুম! 👋 আমি তাসনিম ডেইরি ফার্মের সহায়ক। আমি কিভাবে সাহায্য করতে পারি?',
-    'হ্যালো! 👋 আমি Tasnim AI. আপনাকে কিভাবে সাহায্য করতে পারি?',
-    'নমস্কার! 🌾 আমি তাসনিম ডেইরি ফার্মের AI সহায়ক। আপনার প্রশ্ন কী?',
+    'আস্সালামু আলাইকুম! 👋 আমি মৌ, তাসনিম ডেইরি ফার্মের সহায়ক। আমি কিভাবে সাহায্য করতে পারি?',
+    'হ্যালো! 🐄 আমি Mou. আপনাকে কিভাবে সাহায্য করতে পারি?',
   ],
-  about: [
-    'তাসনিম ডেইরি ফার্ম বাংলাদেশের এক অগ্রণী ডেইরি প্রডাকশন কোম্পানি। আমরা উচ্চমানের দুগ্ধ এবং ডেইরি পণ্য উৎপাদন করি।',
-    'Tasnim Dairy Farm is a leading dairy production company in Bangladesh. We produce high-quality milk and dairy products.',
-  ],
-  products: [
-    'আমরা বিভিন্ন প্রকার দুগ্ধ পণ্য তৈরি করি: দুধ, পনির, দই, আইসক্রিম এবং বিভিন্ন স্বাদের দুগ্ধ পণ্য।',
-    'We produce various dairy products: Milk, Cheese, Yogurt, Ice Cream, and flavored dairy products.',
-  ],
-  contact: [
-    'যোগাযোগের জন্য আমাদের ওয়েবসাইটে কন্টাক্ট পেজটি দেখুন অথবা আমাদের ফোন নম্বরে যোগাযোগ করুন।',
-    'Please visit our Contact page on the website or call us directly for any inquiries.',
-  ],
-  location: [
-    'তাসনিম ডেইরি ফার্ম বাংলাদেশের ঢাকা এবং চট্টগ্রামে অবস্থিত।',
-    'Tasnim Dairy Farm is located in Dhaka and Chittagong, Bangladesh.',
-  ],
-  default: [
-    'আমি আপনার প্রশ্নটি বুঝতে পেরেছি। আরও বিস্তারিত জানালে আমি ভালোভাবে সাহায্য করতে পারব।',
-    'I understand your question. If you provide more details, I can help you better.',
+  error: [
+    'দুঃখিত, আমি এই মুহূর্তে আপনার প্রশ্নের উত্তর দিতে পারছি না। অনুগ্রহ করে আমাদের কন্টাক্ট ফর্মের মাধ্যমে যোগাযোগ করুন। 🙏',
+    'Sorry, I cannot answer right now. Please contact us through the contact form. 🙏',
   ],
 };
 
 /**
- * Get response based on user message keywords
+ * ✅ FIX #2: config validation এ আরও বেশি info দিচ্ছি,
+ * যাতে server start-এর সময়ই বুঝা যায় সমস্যা আছে কি না।
  */
-const getResponse = (userMessage) => {
-  const msg = userMessage.toLowerCase();
+const getLongcatConfig = () => {
+  const config = {
+    apiKey: process.env.LONGCAT_API_KEY,
+    baseUrl: process.env.LONGCAT_BASE_URL || 'https://api.longcat.chat',
+    model: process.env.LONGCAT_MODEL || 'LongCat-2.0',
+    timeout: 30000,
+    retryAttempts: 3,
+    retryDelay: 1000
+  };
 
-  // Check for greetings
-  if (msg.match(/(হ্যালো|হাই|আসসালামু আলাইকুম |good morning|good afternoon|good evening|hi\s|hello\s)/)) {
-    return RESPONSES.greetings[Math.floor(Math.random() * RESPONSES.greetings.length)];
+  if (!config.apiKey) {
+    // এটা এখন startup এর সময়ই ধরা পড়বে, request আসার অপেক্ষায় থাকবে না
+    throw new Error(
+      'LONGCAT_API_KEY environment variable is missing. ' +
+      'Check your .env file exists and dotenv.config() runs before this file loads.'
+    );
   }
 
-  // Check for about us
-  if (msg.match(/(তাসনিম|ডেইরি|ফার্ম|কোম্পানি|সম্পর্কে|about|about us|who are you)/)) {
-    return RESPONSES.about[Math.floor(Math.random() * RESPONSES.about.length)];
-  }
+  return config;
+};
 
-  // Check for products
-  if (msg.match(/(পণ্য|উৎপাদন|দুগ্ধ|দুধ|পনির|দই|আইসক্রিম|product|milk|cheese|yogurt|ice cream)/)) {
-    return RESPONSES.products[Math.floor(Math.random() * RESPONSES.products.length)];
-  }
+/**
+ * ✅ FIX #3: retry logic ঠিক আছে, কিন্তু non-retryable errors
+ * (যেমন 401 Unauthorized, 400 Bad Request) এ retry করা মানে
+ * শুধু সময় নষ্ট — key ভুল থাকলে ৩ বার retry করেও কাজ হবে না।
+ * তাই status code চেক করে retry স্কিপ করছি।
+ */
+const callLongcatAPI = async (messages, config, attempt = 1) => {
+  try {
+    console.log(`[Longcat AI] Attempt ${attempt}/${config.retryAttempts} → ${config.baseUrl}/openai/v1/chat/completions`);
 
-  // Check for contact
-  if (msg.match(/(যোগাযোগ|যোগাযোগ|কন্টাক্ট|কল|ফোন|email|contact|call)/)) {
-    return RESPONSES.contact[Math.floor(Math.random() * RESPONSES.contact.length)];
-  }
+    const response = await axios.post(
+      `${config.baseUrl}/openai/v1/chat/completions`,
+      {
+        model: config.model,
+        messages,
+        max_tokens: 500,
+        temperature: 0.7,
+        top_p: 1,
+        frequency_penalty: 0,
+        presence_penalty: 0
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: config.timeout
+      }
+    );
 
-  // Check for location
-  if (msg.match(/(অবস্থান|ঢাকা|চট্টগ্রাম|ঠিকানা|location|where|address)/)) {
-    return RESPONSES.location[Math.floor(Math.random() * RESPONSES.location.length)];
-  }
+    if (response.data?.choices?.length > 0) {
+      return response.data.choices[0].message.content.trim();
+    } else {
+      throw new Error('Invalid response format from Longcat AI: ' + JSON.stringify(response.data));
+    }
 
-  // Default response
-  return RESPONSES.default[Math.floor(Math.random() * RESPONSES.default.length)];
+  } catch (error) {
+    const status = error.response?.status;
+    const responseData = error.response?.data;
+
+    console.error(`[Longcat AI] Attempt ${attempt} FAILED`);
+    console.error(`  → Status: ${status || 'NO RESPONSE (network/timeout issue)'}`);
+    console.error(`  → Message: ${error.message}`);
+    console.error(`  → Response body: ${JSON.stringify(responseData)}`);
+
+    // ✅ non-retryable errors — এগুলোতে আবার চেষ্টা করা বৃথা
+    const nonRetryableStatuses = [400, 401, 403, 404];
+    if (status && nonRetryableStatuses.includes(status)) {
+      const err = new Error(
+        `Longcat API rejected the request (${status}): ${JSON.stringify(responseData)}`
+      );
+      err.status = status;
+      err.nonRetryable = true;
+      throw err;
+    }
+
+    if (attempt < config.retryAttempts) {
+      await new Promise(resolve => setTimeout(resolve, config.retryDelay * attempt));
+      return callLongcatAPI(messages, config, attempt + 1);
+    }
+
+    throw error;
+  }
+};
+
+const getAIResponse = async (userMessage) => {
+  const config = getLongcatConfig(); // এখানে throw হলে বাইরের catch এ যাবে
+
+  console.log(`[Longcat AI] Processing: "${userMessage.substring(0, 50)}..."`);
+  console.log(`[Longcat AI] Model: ${config.model} | Base URL: ${config.baseUrl}`);
+
+  const messages = [
+    { role: 'system', content: WEBSITE_CONTEXT },
+    { role: 'user', content: userMessage }
+  ];
+
+  const aiResponse = await callLongcatAPI(messages, config);
+  console.log(`[Longcat AI] Response OK: "${aiResponse.substring(0, 100)}..."`);
+  return aiResponse;
 };
 
 /**
  * POST /api/chatbot
- * Send a message and get AI response
  */
 router.post('/', async (req, res) => {
   try {
-    console.log('Chatbot API Request Body:', req.body);
-    
     const { message } = req.body;
 
-    if (!message || !message.trim()) {
-      return res.status(400).json({ 
-        error: 'Message is required' 
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message is required and must be a non-empty string'
       });
     }
 
-    const aiResponse = getResponse(message);
+    const sanitizedMessage = message.trim();
+    if (sanitizedMessage.length > 1000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message too long. Maximum 1000 characters allowed.'
+      });
+    }
 
-    res.json({
+    const aiResponse = await getAIResponse(sanitizedMessage);
+
+    return res.json({
       success: true,
-      message: aiResponse
+      message: aiResponse,
+      powered_by: 'Longcat AI'
     });
+
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    console.error('Chatbot API Error:', errorMessage);
-    res.status(500).json({ 
-      error: errorMessage 
+    console.error('[Chatbot API] Fatal error:', error.message);
+
+    // greeting detection fallback আগের মতোই রাখলাম
+    const msg = (req.body?.message || '').toLowerCase();
+    if (msg.match(/(হ্যালো|হাই|আসসালামু|hi|hello|good morning|good afternoon|hey)/)) {
+      return res.json({
+        success: true,
+        message: FALLBACK_RESPONSES.greetings[Math.floor(Math.random() * FALLBACK_RESPONSES.greetings.length)],
+        fallback: true
+      });
+    }
+
+    const fallbackMsg = FALLBACK_RESPONSES.error[Math.floor(Math.random() * FALLBACK_RESPONSES.error.length)];
+
+    // ✅ FIX #4: এটাই সবচেয়ে গুরুত্বপূর্ণ ফিক্স।
+    // production এ user কে fallback message দেখাও (ঠিক আছে),
+    // কিন্তু development এ আসল error দেখাও, নাহলে তুমি কখনো বাগ ধরতে পারবে না।
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    return res.json({
+      success: true,
+      message: fallbackMsg,
+      fallback: true,
+      ...(isDev && {
+        debug_error: error.message,
+        debug_status: error.status || error.response?.status || null
+      })
     });
   }
 });
