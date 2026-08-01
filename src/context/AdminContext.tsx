@@ -16,6 +16,67 @@ const getApiUrl = () => {
 
 export const API_BASE_URL = getApiUrl();
 
+// Secure token management
+const TOKEN_KEY = 'auth_token';
+const TOKEN_EXPIRY_KEY = 'auth_token_expiry';
+
+const getStoredToken = () => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+  
+  if (!token || !expiry) {
+    return null;
+  }
+  
+  // Check if token is expired
+  if (new Date().getTime() > parseInt(expiry)) {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_EXPIRY_KEY);
+    return null;
+  }
+  
+  return token;
+};
+
+const setStoredToken = (token: string, expiresIn: string) => {
+  const expiryTime = new Date().getTime() + (24 * 60 * 60 * 1000); // 24 hours
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
+};
+
+const removeStoredToken = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  localStorage.removeItem('tasnim_admin'); // Remove old admin flag
+};
+
+// Secure API call helper with authentication
+const secureApiCall = async (url: string, options: RequestInit = {}) => {
+  const token = getStoredToken();
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+  
+  // Handle token expiry
+  if (response.status === 401 || response.status === 403) {
+    removeStoredToken();
+    window.location.reload(); // Force re-authentication
+  }
+  
+  return response;
+};
+
 // Helper function for safe JSON parsing
 const safeJsonParse = async (response: Response) => {
   try {
@@ -25,7 +86,6 @@ const safeJsonParse = async (response: Response) => {
     throw new Error('Server returned invalid response format');
   }
 };
-
 // Helper function for safe error handling
 const handleResponseError = async (response: Response, defaultMessage: string) => {
   let errorMessage = defaultMessage;
@@ -43,68 +103,10 @@ const handleResponseError = async (response: Response, defaultMessage: string) =
   throw new Error(errorMessage);
 };
 
-// Fallback mock data for when backend is offline
-const MOCK_DATA = {
-  founders: [
-    {
-      id: 1,
-      name: 'Mobasshera Sultana',
-      role: 'Founder & CEO',
-      responsibilities: ['Strategic Leadership', 'Farm Management', 'Growth Planning'],
-      image: '/images/Founder & CEO.png'
-    },
-    {
-      id: 2,
-      name: 'Johirul Islam',
-      role: 'Founder & CO',
-      responsibilities: ['Operations', 'Expansion Planning', 'Resource Management'],
-      image: '/images/Founder & CO.png'
-    },
-    {
-      id: 3,
-      name: 'Rakibul Hasan Rahat',
-      role: 'Founder & Marketing Lead',
-      responsibilities: ['Branding', 'Marketing', 'Public Relations'],
-      image: '/images/Founder & Marketing Lead.png'
-    },
-    {
-      id: 4,
-      name: 'Anjhum Akter',
-      role: 'Founder & Accountant',
-      responsibilities: ['Financial Management', 'Accounting', 'Budget Planning'],
-      image: '/images/Founder & Accountant.png'
-    },
-    {
-      id: 5,
-      name: 'Etheka Ariyana',
-      role: 'Brand Ambassador',
-      responsibilities: ['Brand Representation', 'Public Relations', 'Community Engagement'],
-      image: '/images/Brand Ambassador.png'
-    }
-  ] as Founder[],
-  settings: {
-    id: 1,
-    siteName: 'Tasnim Dairy Farm',
-    tagline: 'Pure Milk, Pure Promise',
-    phone: '+880 1700-000000',
-    email: 'info@tasnimdairyfarm.com',
-    address: 'Tasnim Dairy Farm Complex, Dhaka, Bangladesh',
-    mapEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3648.3197948897306!2d90.36914952346814!3d23.810255589999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755c7212f5f5f5f%3A0x5f5f5f5f5f5f5f5f!2sTasnim%20Dairy%20Farm!5e0!3m2!1sen!2sbd!4v1234567890',
-    facebook: 'https://facebook.com',
-    instagram: 'https://instagram.com',
-    whatsapp: 'https://wa.me/8801700000000',
-    youtube: 'https://youtube.com',
-    linkedin: 'https://linkedin.com',
-    aboutContent: 'Tasnim Dairy Farm was established on 14 February 2026 with a vision to revolutionize dairy farming in Bangladesh.',
-    vision: 'To become one of the most trusted dairy farms in Bangladesh',
-    mission: ['Produce healthy and pure milk', 'Maintain the highest farm hygiene standards', 'Ensure animal welfare and ethical treatment'],
-    visitors: 10482
-  } as SiteSettings
-};
-
 interface AdminContextType {
   isAdminLoggedIn: boolean;
-  loginAdmin: (user: string, pass: string) => boolean;
+  loginAdmin: (user: string, pass: string) => Promise<boolean>;
+  logoutAdmin: () => void;
   logoutAdmin: () => void;
   settings: SiteSettings;
   updateSettings: (s: Partial<SiteSettings>) => Promise<void>;
@@ -146,7 +148,7 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
-    return localStorage.getItem('tasnim_admin') === 'true';
+    return getStoredToken() !== null;
   });
   const [loading, setLoading] = useState(false);
   
@@ -238,18 +240,37 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // localStorage only for growth stats
   useEffect(() => { localStorage.setItem('tasnim_growth', JSON.stringify(growthStats)); }, [growthStats]);
 
-  const loginAdmin = (user: string, pass: string): boolean => {
-    if (user === 'admin' && pass === 'tasnim@2026') {
-      setIsAdminLoggedIn(true);
-      localStorage.setItem('tasnim_admin', 'true');
-      return true;
+  const loginAdmin = async (user: string, pass: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: user,
+          password: pass,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.token) {
+          setStoredToken(data.token, data.expiresIn);
+          setIsAdminLoggedIn(true);
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
   const logoutAdmin = () => {
     setIsAdminLoggedIn(false);
-    localStorage.removeItem('tasnim_admin');
+    removeStoredToken();
   };
 
   const updateSettings = async (s: Partial<SiteSettings>) => {
