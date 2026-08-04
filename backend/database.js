@@ -124,6 +124,15 @@ async function initPostgreSQL() {
         color TEXT,
         side TEXT,
         sort_order INTEGER DEFAULT 0
+      )`,
+      `CREATE TABLE IF NOT EXISTS admins (
+        id SERIAL PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'admin',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_login_at TIMESTAMP
       )`
     ];
 
@@ -280,6 +289,15 @@ async function initSQLite() {
       color TEXT,
       side TEXT,
       sort_order INTEGER DEFAULT 0
+    )`);
+    db.run(`CREATE TABLE IF NOT EXISTS admins (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'admin',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      last_login_at TEXT
     )`);
 
     saveSQLite();

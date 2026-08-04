@@ -147,40 +147,29 @@ const testAuthentication = async () => {
       }
     }
 
-    // Test login endpoint
+    // Test login endpoint with old hardcoded credentials (should fail)
     try {
       const response = await axios.post(`${BASE_URL}/api/auth/login`, {
         username: 'admin',
         password: 'tasnim@2026'
       });
 
-      if (response.data.success && response.data.accessToken) {
-        log.success('Login endpoint working correctly');
-        addResult('Login Functionality', true, 'Token returned');
-        
-        // Test protected endpoint with valid token
-        const token = response.data.accessToken;
-        try {
-          const protectedResponse = await axios.get(`${BASE_URL}/api/admin/dashboard`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          if (protectedResponse.status === 200) {
-            log.success('JWT authentication working');
-            addResult('JWT Authentication', true, 'Protected access granted');
-          }
-        } catch (authError) {
-          log.error(`Protected access failed: ${authError.response?.status}`);
-          addResult('JWT Authentication', false, authError.message);
-        }
-      } else {
-        log.error('Login endpoint not returning token');
-        addResult('Login Functionality', false, 'No token returned');
-      }
+      // If we get here, the old credentials still work (BAD!)
+      log.error('CRITICAL: Old hardcoded credentials still work!');
+      addResult('Hardcoded Credentials Security', false, 'Old credentials accepted');
+      
     } catch (loginError) {
-      log.error(`Login test failed: ${loginError.message}`);
-      addResult('Login Functionality', false, loginError.message);
+      if (loginError.response?.status === 401) {
+        log.success('Old hardcoded credentials properly rejected');
+        addResult('Hardcoded Credentials Security', true, 'Old credentials rejected');
+      } else {
+        log.warning(`Unexpected response to old credentials: ${loginError.response?.status}`);
+        addResult('Hardcoded Credentials Security', false, `Status: ${loginError.response?.status}`);
+      }
     }
+
+    // Note: Cannot test new database authentication without seeded admin
+    log.info('Database authentication requires seeded admin account (run: npm run seed:admin)');
 
     // Test invalid credentials
     try {
@@ -282,20 +271,20 @@ const testFileUploadSecurity = async () => {
   log.header('📁 TESTING FILE UPLOAD SECURITY');
   
   try {
-    // First get a valid token
-    const authResponse = await axios.post(`${BASE_URL}/api/auth/login`, {
-      username: 'admin',
-      password: 'tasnim@2026'
-    });
-
-    if (!authResponse.data.accessToken) {
-      log.error('Cannot test file upload: No auth token');
-      return;
+    // First try to get a valid token (will fail if no admin is seeded)
+    let token = null;
+    try {
+      const authResponse = await axios.post(`${BASE_URL}/api/auth/login`, {
+        username: 'test_admin', // Use a different username that won't exist
+        password: 'dummy_password'
+      });
+      token = authResponse.data.accessToken;
+    } catch (authError) {
+      // Expected to fail - we just want to test file upload rejection without auth
+      log.info('No valid admin credentials for file upload test (expected if not seeded)');
     }
 
-    const token = authResponse.data.accessToken;
-
-    // Test malicious file types
+    // Test malicious file types without authentication first
     const maliciousFiles = [
       { name: 'script.js', content: 'console.log("malicious")' },
       { name: 'executable.exe', content: 'MZ\x90\x00' },
@@ -309,18 +298,19 @@ const testFileUploadSecurity = async () => {
         form.append('image', Buffer.from(file.content), file.name);
 
         await axios.post(`${BASE_URL}/api/upload/image`, form, {
-          headers: {
-            ...form.getHeaders(),
-            'Authorization': `Bearer ${token}`
-          }
+          headers: form.getHeaders()
+          // No Authorization header - should be rejected
         });
 
-        log.error(`Malicious file accepted: ${file.name}`);
-        addResult(`File Upload Security: ${file.name}`, false, 'Accepted');
+        log.error(`File upload allowed without authentication: ${file.name}`);
+        addResult(`File Upload Security: ${file.name} (no auth)`, false, 'Allowed without auth');
       } catch (error) {
-        if (error.response?.status === 400) {
-          log.success(`Malicious file rejected: ${file.name}`);
-          addResult(`File Upload Security: ${file.name}`, true, 'Rejected');
+        if (error.response?.status === 401) {
+          log.success(`File upload properly requires authentication: ${file.name}`);
+          addResult(`File Upload Security: ${file.name} (no auth)`, true, 'Auth required');
+        } else if (error.response?.status === 400) {
+          log.success(`File type rejected: ${file.name}`);
+          addResult(`File Upload Security: ${file.name} (no auth)`, true, 'File type rejected');
         } else {
           log.warning(`Unexpected response for ${file.name}: ${error.response?.status}`);
         }

@@ -288,8 +288,77 @@ const handleLogin = async (req, res) => {
   const clientIP = getClientIP(req);
 
   try {
-    // Validate credentials (in production, fetch from database)
-    const isValidCredentials = username === 'admin' && password === 'tasnim@2026';
+    // Get database instance
+    const { usePg, getDatabase } = require('../database');
+    
+    let user = null;
+    
+    if (usePg) {
+      // PostgreSQL query
+      const client = await getDatabase().connect();
+      try {
+        const result = await client.query('SELECT * FROM admins WHERE username = $1', [username]);
+        user = result.rows[0] || null;
+        
+        // Update last_login_at on successful authentication (we'll do this later)
+      } finally {
+        client.release();
+      }
+    } else {
+      // SQLite query
+      const db = getDatabase();
+      const result = db.exec('SELECT * FROM admins WHERE username = ?', [username]);
+      
+      if (result.length > 0 && result[0].values.length > 0) {
+        const row = result[0].values[0];
+        const columns = result[0].columns;
+        user = {};
+        columns.forEach((col, index) => {
+          user[col] = row[index];
+        });
+      }
+    }
+    
+    // Check if any admin accounts exist
+    let hasAdmins = false;
+    if (usePg) {
+      const client = await getDatabase().connect();
+      try {
+        const countResult = await client.query('SELECT COUNT(*) as count FROM admins');
+        hasAdmins = parseInt(countResult.rows[0].count) > 0;
+      } finally {
+        client.release();
+      }
+    } else {
+      const db = getDatabase();
+      try {
+        const countResult = db.exec('SELECT COUNT(*) as count FROM admins');
+        hasAdmins = countResult.length > 0 && countResult[0].values[0][0] > 0;
+      } catch (error) {
+        // Table might not exist yet
+        hasAdmins = false;
+      }
+    }
+    
+    // If no admins exist, return specific message
+    if (!hasAdmins) {
+      logSecurityEvent(SECURITY_EVENTS.AUTH_FAILURE, {
+        reason: 'No admin accounts configured',
+        ip: clientIP
+      }, req);
+      
+      return res.status(401).json({
+        error: 'No admin account configured. Run the seed script first.',
+        code: 'NO_ADMIN_CONFIGURED',
+        hint: 'Run: npm run seed:admin'
+      });
+    }
+    
+    // Verify credentials using bcrypt
+    let isValidCredentials = false;
+    if (user && user.password_hash) {
+      isValidCredentials = await comparePassword(password, user.password_hash);
+    }
     
     if (!isValidCredentials) {
       // Record failed attempt for brute force protection
@@ -311,6 +380,22 @@ const handleLogin = async (req, res) => {
       });
     }
 
+    // Update last login timestamp
+    const now = new Date().toISOString();
+    if (usePg) {
+      const client = await getDatabase().connect();
+      try {
+        await client.query('UPDATE admins SET last_login_at = $1 WHERE id = $2', [now, user.id]);
+      } finally {
+        client.release();
+      }
+    } else {
+      const db = getDatabase();
+      db.run('UPDATE admins SET last_login_at = ? WHERE id = ?', [now, user.id]);
+      const { saveSQLite } = require('../database');
+      saveSQLite();
+    }
+
     // TODO: Check 2FA if enabled for user
     // For now, 2FA is optional
     if (twoFactorToken) {
@@ -326,8 +411,8 @@ const handleLogin = async (req, res) => {
 
     // Generate tokens
     const tokenPayload = {
-      username,
-      role: 'admin',
+      username: user.username,
+      role: user.role,
       ip: clientIP,
       iat: Math.floor(Date.now() / 1000)
     };
@@ -336,9 +421,10 @@ const handleLogin = async (req, res) => {
 
     // Log successful login
     logSecurityEvent(SECURITY_EVENTS.AUTH_SUCCESS, {
-      username,
+      username: user.username,
       ip: clientIP,
-      userAgent: req.get('User-Agent')
+      userAgent: req.get('User-Agent'),
+      lastLogin: user.last_login_at
     }, req);
 
     // Set secure HTTP-only cookies for tokens
@@ -354,8 +440,8 @@ const handleLogin = async (req, res) => {
       accessToken,
       expiresIn: JWT_EXPIRES_IN,
       user: {
-        username,
-        role: 'admin'
+        username: user.username,
+        role: user.role
       }
     });
 

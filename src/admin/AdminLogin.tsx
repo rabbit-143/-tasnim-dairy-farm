@@ -134,13 +134,7 @@ const AdminLogin: React.FC = () => {
           </button>
         </form>
 
-        {/* <div style={{
-          marginTop: '1.5rem', padding: '1rem', background: '#F8F9FA',
-          borderRadius: '12px', fontSize: '0.78rem', color: '#6b7280', textAlign: 'center',
-        }}>
-          <p>Default credentials:</p>
-          <p style={{ color: '#0F5D2F', fontWeight: 600 }}>Username: admin | Password: tasnim@2026</p>
-        </div> */}
+        {/* Development credential display has been removed for security */}
       </div>
 
       <style>{`
